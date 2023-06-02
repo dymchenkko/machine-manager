@@ -17,3 +17,4 @@ mkdir -p test-files
 wget -O test-files/linux.bin -c https://github.com/cartesi/image-kernel/releases/download/v0.16.0/linux-5.15.63-ctsi-2.bin
 wget -O test-files/rom.bin -c https://github.com/cartesi/machine-emulator-rom/releases/download/v0.16.0/rom-v0.16.0.bin
 wget -O test-files/rootfs.ext2 -c https://github.com/cartesi/image-rootfs/releases/download/v0.17.0/rootfs-v0.17.0.ext2
+wget -O test-files/uarch-ram.bin -c https://web3.link/uarch-ram.bin
