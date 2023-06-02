@@ -756,7 +756,7 @@ impl GrpcCartesiMachineClient {
             }),
             one_based,
         });
-        let response = self.client.step_uarch(request).await?;
+        let response: Response<StepUarchResponse> = self.client.step_uarch(request).await?;
         match response.into_inner().log {
             Some(log) => Ok(AccessLog::from(&log)),
             None => Err(Box::new(GrpcCartesiMachineError::new(

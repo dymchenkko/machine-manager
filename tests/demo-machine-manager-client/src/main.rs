@@ -10,13 +10,15 @@
 // specific language governing permissions and limitations under the License.
 
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::{
-    ClintConfig, HtifConfig, machine_request, ProcessorConfig, DhdConfig,
+    ClintConfig, HtifConfig, machine_request, ProcessorConfig,
     MemoryRangeConfig, MachineConfig, MachineRequest, MachineRuntimeConfig,
-     RamConfig, RollupConfig, RomConfig,
+     RamConfig, RollupConfig, RomConfig, UarchConfig,
 };
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::machine_manager_client::MachineManagerClient;
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::*;
-
+use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::UarchProcessorConfig;
+use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::UarchRamConfig;
+use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::TlbConfig;
 pub const CARTESI_BIN_PATH: &str = "CARTESI_BIN_PATH";
 pub const CARTESI_IMAGE_PATH: &str = "CARTESI_IMAGE_PATH";
 
@@ -54,12 +56,47 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
             x29: Some(0),
             x30: Some(0),
             x31: Some(0),
+            f0: Some(0),
+            f1: Some(0),
+            f2: Some(0),
+            f3: Some(0),
+            f4: Some(0),
+            f5: Some(0),
+            f6: Some(0),
+            f7: Some(0),
+            f8: Some(0),
+            f9: Some(0),
+            f10: Some(0),
+            f11: Some(0),
+            f12: Some(0),
+            f13: Some(0),
+            f14: Some(0),
+            f15: Some(0),
+            f16: Some(0),
+            f17: Some(0),
+            f18: Some(0),
+            f19: Some(0),
+            f20: Some(0),
+            f21: Some(0),
+            f22: Some(0),
+            f23: Some(0),
+            f24: Some(0),
+            f25: Some(0),
+            f26: Some(0),
+            f27: Some(0),
+            f28: Some(0),
+            f29: Some(0),
+            f30: Some(0),
+            f31: Some(0),
+            fcsr: Some(0),
+            menvcfg: Some(0),
+            senvcfg: Some(0),
             pc: Some(0x1000),
             mvendorid: Some(0x6361727465736920),
-            marchid: Some(0xc),
+            marchid: Some(0xf),
             mimpid: Some(1),
             mcycle: Some(0),
-            minstret: Some(0),
+            icycleinstret: Some(0),
             mstatus: Some(0),
             mtvec: Some(0),
             mscratch: Some(0),
@@ -81,6 +118,11 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
             scounteren: Some(0),
             ilrsc: Some(u64::MAX),
             iflags: Some(0x0),
+        }),
+        tlb: None,
+        uarch: Some(UarchConfig {
+            processor: Some(UarchProcessorConfig::default()),
+            ram: Some(UarchRamConfig::default())
         }),
         ram: Some(RamConfig {
             length: 64 << 20,
@@ -105,14 +147,6 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
             yield_automatic: false,
             fromhost: Some(0),
             tohost: Some(0),
-        }),
-        dhd: Some(DhdConfig {
-            tstart: 0,
-            tlength: 0,
-            image_filename: String::new(),
-            dlength: 0,
-            hlength: 0,
-            h: vec![0; 4],
         }),
         rollup: Some(RollupConfig {
             input_metadata: Some(MemoryRangeConfig{
@@ -151,7 +185,6 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
 
 pub fn generate_default_machine_rt_config() -> MachineRuntimeConfig {
     MachineRuntimeConfig {
-        dhd: None,
         concurrency: None,
     }
 }
