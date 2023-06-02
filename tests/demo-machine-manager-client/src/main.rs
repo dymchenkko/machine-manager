@@ -18,7 +18,6 @@ use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::machine_manage
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::*;
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::UarchProcessorConfig;
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::UarchRamConfig;
-use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::TlbConfig;
 pub const CARTESI_BIN_PATH: &str = "CARTESI_BIN_PATH";
 pub const CARTESI_IMAGE_PATH: &str = "CARTESI_IMAGE_PATH";
 
@@ -103,7 +102,7 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
             mepc: Some(0),
             mcause: Some(0),
             mtval: Some(0),
-            misa: Some(0x141101),
+            misa: Some(0x800000000014112d),
             mie: Some(0),
             mip: Some(0),
             medeleg: Some(0),
@@ -133,8 +132,8 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
             image_filename: format!("{}/rom.bin", files_dir),
         }),
         flash_drive: vec![MemoryRangeConfig {
-            start: 1 << 63,
-            length: 62914560,
+            start: 1 << 55,
+            length: 71303168,
             image_filename: format!("{}/rootfs.ext2", files_dir),
             shared: false,
         }],
@@ -201,7 +200,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
     // Instantiate client
     let mut client = MachineManagerClient::connect("http://127.0.0.1:50051").await?;
-
     // Create new session
     let machine = Some(MachineRequest {
         runtime: Some(generate_default_machine_rt_config()),

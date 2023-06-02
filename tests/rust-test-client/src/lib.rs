@@ -105,14 +105,6 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
             fromhost: Some(0),
             tohost: Some(0),
         }),
-        dhd: Some(DhdConfig {
-            tstart: 0,
-            tlength: 0,
-            image_filename: String::new(),
-            dlength: 0,
-            hlength: 0,
-            h: vec![0; 4],
-        }),
         rollup: Some(RollupConfig {
             rx_buffer: Some(MemoryRangeConfig {
                 start: 0x60000000,
@@ -150,11 +142,9 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
 
 pub fn generate_default_machine_rt_config() -> MachineRuntimeConfig {
     MachineRuntimeConfig {
-        dhd: None,
         concurrency: None,
     }
 }
-
 #[derive(Default)]
 pub struct MachineManagerClientProxy {
     pub session_id: String,

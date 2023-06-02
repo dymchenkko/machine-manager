@@ -33,8 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let csr_addr = grpc_machine.get_csr_address(Csr::Mcycle).await?;
     println!("I got csr address of mcycle reg: {}", csr_addr);
 
-    let semantic_version = grpc_machine.get_version().await?;
-    println!("I got dhd  address of reg index 3: {:#?}", semantic_version);
+   // let semantic_version = grpc_machine.get_version().await?;
+    //println!("I got dhd  address of reg index 3: {:#?}", semantic_version);
 
     default_config.rom = RomConfig {
         bootargs: default_config.rom.bootargs,
@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     grpc_machine
         .create_machine(&default_config, &MachineRuntimeConfig::default())
         .await?;
-    println!("I got dhd  address of reg index 3: {:#?}", semantic_version);
+    //println!("I got dhd  address of reg index 3: {:#?}", semantic_version);
 
     let hash = grpc_machine.get_root_hash().await?;
     println!("Root hash step 0 {:?}", hash);
