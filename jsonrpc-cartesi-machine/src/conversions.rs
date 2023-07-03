@@ -10,18 +10,19 @@
 // specific language governing permissions and limitations under the License.
 
 use cartesi_jsonrpc_interfaces::index::*;
-impl From<&crate::MachineRuntimeConfig> for ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6 {
+
+impl From<&crate::MachineRuntimeConfig> for MachineRuntimeConfig {
     fn from(rc: &crate::MachineRuntimeConfig) -> Self {
-        ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6 {
-            concurrency: Some(ObjectOfInteger7Bd9WOt2INmaA59K {
+        MachineRuntimeConfig {
+            concurrency: Some(cartesi_jsonrpc_interfaces::index::ConcurrencyConfig {
                 update_merkle_tree: Some(rc.concurrency.update_merkle_tree),
             }),
         }
     }
 }
-impl From<&crate::MerkleTreeProof> for ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQ {
+impl From<&crate::MerkleTreeProof> for Proof {
     fn from(proof: &crate::MerkleTreeProof) -> Self {
-        ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQ {
+        Proof {
             target_address: proof.target_address,
             log_2_target_size: proof.log2_target_size as u64,
             log_2_root_size: proof.log2_root_size as u64,
@@ -33,7 +34,7 @@ impl From<&crate::MerkleTreeProof> for ObjectOfStringLtCQe6EUInteger7Bd9WOt2Unor
     }
 }
 
-impl From<&crate::Access> for ObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85Fz {
+impl From<&crate::Access> for Access {
     fn from(access: &crate::Access) -> Self {
         let mut read = base64::encode(access.read_data.clone());
         let mut written = base64::encode(access.written_data.clone());
@@ -46,24 +47,24 @@ impl From<&crate::Access> for ObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5Obj
             written.push('\n');
         }
 
-        ObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85Fz {
+        Access {
             r#type: match access.r#type {
                 crate::AccessType::Read => serde_json::json!("read"),
                 crate::AccessType::Write => serde_json::json!("write"),
             },
             read: read,
             written: Some(written),
-            proof: Some(ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQ::from(&access.proof)),
+            proof: Some(Proof::from(&access.proof)),
             address: access.address,
             log_2_size: access.log2_size as u64,
         }
     }
 }
 
-impl std::convert::From<&crate::BracketNote> for ObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0 {
+impl std::convert::From<&crate::BracketNote> for Bracket {
     fn from(bracket_note: &crate::BracketNote) -> Self {
-        ObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0 {
-            _type: match bracket_note.r#type {
+        Bracket {
+            r#type: match bracket_note.r#type {
                 crate::BracketType::Begin => serde_json::json!("begin"),
                 crate::BracketType::End => serde_json::json!("end"),
             },
@@ -73,31 +74,31 @@ impl std::convert::From<&crate::BracketNote> for ObjectOfInteger7Bd9WOt2AnyIiyro
     }
 }
 
-impl From<&crate::AccessLogType> for ObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2 {
+impl From<&crate::AccessLogType> for AccessLogType {
     fn from(log_type: &crate::AccessLogType) -> Self {
-        ObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2 {
+        AccessLogType {
             has_proofs: log_type.proofs,
             has_annotations: log_type.annotations,
         }
     }
 }
-impl From<&crate::AccessLog> for ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD {
+impl From<&crate::AccessLog> for AccessLog {
     fn from(log: &crate::AccessLog) -> Self {
-        let log_type = ObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2 {
+        let log_type = AccessLogType {
                 has_proofs: log.log_type.proofs,
                 has_annotations: log.log_type.annotations
         };
-        ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD {
+        AccessLog {
             log_type,
-            accesses: log.accesses.iter().map(|e| ObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85Fz::from(e)).collect(),
-            brackets: Some(log.brackets.iter().map(|e| ObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0::from(e)).collect()),
+            accesses: log.accesses.iter().map(|e| Access::from(e)).collect(),
+            brackets: Some(log.brackets.iter().map(|e| Bracket::from(e)).collect()),
             notes: Some(log.notes.clone()),
         }
     }
 }
 
 pub fn convert_x_csr_field(
-    config: &ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4Q,
+    config: &ProcessorConfig,
 ) -> [u64; 32usize] {
     let mut result: [u64; 32usize] = [0; 32usize];
     result[0] = convert_csr_field(Some(config.x.clone().unwrap()[0]));
@@ -135,7 +136,7 @@ pub fn convert_x_csr_field(
 }
 
 pub fn convert_f_csr_field(
-    config: &ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4Q,
+    config: &ProcessorConfig,
 ) -> [u64; 32usize] {
     let mut result: [u64; 32usize] = [0; 32usize];
     result[0] = convert_csr_field(Some(config.f.clone().unwrap()[0]));
@@ -181,9 +182,9 @@ where
     }
 }
 
-impl From<&crate::ProcessorConfig> for ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4Q {
+impl From<&crate::ProcessorConfig> for ProcessorConfig {
     fn from(config: &crate::ProcessorConfig) -> Self {
-        ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4Q {
+        ProcessorConfig {
             x: Some(config.x.to_vec()),
             f: Some(config.f.to_vec()),
             pc: Some(config.pc),
@@ -220,44 +221,44 @@ impl From<&crate::ProcessorConfig> for ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEU
     }
 }
 
-impl From<&crate::RamConfig> for ObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0 {
+impl From<&crate::RamConfig> for RAMConfig {
     fn from(config: &crate::RamConfig) -> Self {
-        ObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0 {
+        RAMConfig {
             length: config.length,
             image_filename: Some(config.image_filename.clone()),
         }
     }
 }
 
-impl From<&crate::RomConfig> for ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6O {
+impl From<&crate::RomConfig> for ROMConfig {
     fn from(config: &crate::RomConfig) -> Self {
-        ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6O {
+        ROMConfig {
             bootargs: Some(config.bootargs.clone()),
             image_filename: Some(config.image_filename.clone()),
         }
     }
 }
 
-impl From<&crate::TlbConfig> for ObjectOfStringDoaGddGAMbKkyjX7 {
+impl From<&crate::TlbConfig> for TLBConfig {
     fn from(config: &crate::TlbConfig) -> Self {
-        ObjectOfStringDoaGddGAMbKkyjX7 {
+        TLBConfig {
             image_filename: Some(config.image_filename.clone()),
         }
     }
 }
 
-impl From<&crate::UarchConfig> for ObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5A {
+impl From<&crate::UarchConfig> for UarchConfig {
     fn from(config: &crate::UarchConfig) -> Self {
-        ObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5A {
+        UarchConfig {
             processor: config.processor.clone(),
             ram: config.ram.clone(),
         }
     }
 }
 
-impl From<&crate::MemoryRangeConfig> for ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F {
+impl From<&crate::MemoryRangeConfig> for MemoryRangeConfig {
     fn from(config: &crate::MemoryRangeConfig) -> Self {
-        ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F {
+        MemoryRangeConfig {
             start: Some(config.start),
             length: Some(config.length),
             image_filename: Some(config.image_filename.clone()),
@@ -266,57 +267,57 @@ impl From<&crate::MemoryRangeConfig> for ObjectOfInteger7Bd9WOt2BooleanVyG3AEThI
     }
 }
 
-impl From<&crate::RollupConfig> for ObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGD {
+impl From<&crate::RollupConfig> for RollupConfig {
     fn from(config: &crate::RollupConfig) -> Self {
-        ObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGD {
+        RollupConfig {
             input_metadata: match &config.input_metadata {
-                Some(config) => Some(ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F::from(config)),
+                Some(config) => Some(MemoryRangeConfig::from(config)),
                 None => None,
             },
             tx_buffer: match &config.tx_buffer {
-                Some(config) => Some(ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F::from(config)),
+                Some(config) => Some(MemoryRangeConfig::from(config)),
                 None => None,
             },
             voucher_hashes: match &config.voucher_hashes {
-                Some(config) => Some(ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F::from(config)),
+                Some(config) => Some(MemoryRangeConfig::from(config)),
                 None => None,
             },
             rx_buffer: match &config.rx_buffer {
-                Some(config) => Some(ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F::from(config)),
+                Some(config) => Some(MemoryRangeConfig::from(config)),
                 None => None,
             },
             notice_hashes: match &config.notice_hashes {
-                Some(config) => Some(ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F::from(config)),
+                Some(config) => Some(MemoryRangeConfig::from(config)),
                 None => None,
             },
         }
     }
 }
 
-impl From<&crate::MachineConfig> for ObjectOfObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5AObjectOfStringDoaGddGAMbKkyjX7ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6OObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGDObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4QObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQeiUnorderedSetOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6Fr01Y9HDOObjectOfInteger7Bd9WOt2KmrDcohfM5JY4BqN {
+impl From<&crate::MachineConfig> for MachineConfig {
     fn from(config: &crate::MachineConfig) -> Self {
-        ObjectOfObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5AObjectOfStringDoaGddGAMbKkyjX7ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6OObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGDObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4QObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQeiUnorderedSetOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6Fr01Y9HDOObjectOfInteger7Bd9WOt2KmrDcohfM5JY4BqN {
-            processor: Some(ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4Q::from(
+        MachineConfig {
+            processor: Some(ProcessorConfig::from(
                 &config.processor,
             )),
-            ram: Some(ObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0::from(&config.ram)),
-            rom: Some(ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6O::from(&config.rom)),
-            tlb: Some(ObjectOfStringDoaGddGAMbKkyjX7::from(&config.tlb)),
-            uarch: Some(ObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5A::from(
+            ram: Some(RAMConfig::from(&config.ram)),
+            rom: Some(ROMConfig::from(&config.rom)),
+            tlb: Some(TLBConfig::from(&config.tlb)),
+            uarch: Some(UarchConfig::from(
                 &config.uarch,
             )),
             flash_drive: Some(config
                 .flash_drives
                 .iter()
-                .map(|e| ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F::from(e))
+                .map(|e| MemoryRangeConfig::from(e))
                 .collect()),
-            clint: Some(ObjectOfInteger7Bd9WOt2KmrDcohf::from(
+            clint: Some(CLINTConfig::from(
                 config.clint.clone(),
             )),
-            htif: Some(ObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQei::from(
+            htif: Some(HTIFConfig::from(
                 config.htif.clone(),
             )),
-            rollup: Some(ObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGD::from(
+            rollup: Some(RollupConfig::from(
                 &config.rollup,
             )),
         }

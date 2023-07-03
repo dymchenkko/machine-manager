@@ -17,6 +17,7 @@ members = [
 "cartesi-grpc-interfaces",
 "cartesi-jsonrpc-interfaces",
 "machine-manager-server",
+"jsonrpc-machine-manager-server",
 "tests/rust-test-client",
 "tests/demo-machine-manager-client"
 ]

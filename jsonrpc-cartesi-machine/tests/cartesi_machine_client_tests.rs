@@ -160,12 +160,12 @@ mod local_server {
             image_filename: String::new(),
         };
         default_config.uarch = jsonrpc_cartesi_machine::UarchConfig {
-            processor: Some(cartesi_jsonrpc_interfaces::index::ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CW {
+            processor: Some(cartesi_jsonrpc_interfaces::index::UarchProcessorConfig {
                 x: Some(vec![0; 32]),
                 pc: Some(0x70000000),
                 cycle: Some(0),
             }),
-            ram: Some(cartesi_jsonrpc_interfaces::index::ObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebB {
+            ram: Some(cartesi_jsonrpc_interfaces::index::UarchRAMConfig {
                 length: Some(77128),
                 image_filename: Some(String::from("/opt/cartesi/share/images/uarch-ram.bin")),
             }),
@@ -471,12 +471,12 @@ mod local_server {
             image_filename: String::new(),
         };
         default_config.uarch = jsonrpc_cartesi_machine::UarchConfig {
-            processor: Some(cartesi_jsonrpc_interfaces::index::ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CW {
+            processor: Some(cartesi_jsonrpc_interfaces::index::UarchProcessorConfig {
                 x: Some(vec![0; 32]),
                 pc: Some(0x70000000),
                 cycle: Some(0),
             }),
-            ram: Some(cartesi_jsonrpc_interfaces::index::ObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebB {
+            ram: Some(cartesi_jsonrpc_interfaces::index::UarchRAMConfig {
                 length: Some(77128),
                 image_filename: Some(String::from("/opt/cartesi/share/images/uarch-ram.bin")),
             }),
@@ -749,7 +749,7 @@ mod local_server {
         context
             .get_server()
             .replace_memory_range(
-                cartesi_jsonrpc_interfaces::index::ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F::from(
+                cartesi_jsonrpc_interfaces::index::MemoryRangeConfig::from(
                     &memory_range_config,
                 ),
             )

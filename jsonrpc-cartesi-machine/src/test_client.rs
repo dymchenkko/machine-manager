@@ -10,8 +10,6 @@
 // specific language governing permissions and limitations under the License.
 
 extern crate jsonrpc_cartesi_machine;
-use cartesi_jsonrpc_interfaces::index::*;
-
 
 use jsonrpc_cartesi_machine::{
     AccessLogType, JsonRpcCartesiMachineClient, MachineRuntimeConfig, MemoryRangeConfig, RamConfig,
@@ -50,12 +48,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     default_config.uarch = UarchConfig {
-        processor: Some(ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CW {
+        processor: Some(cartesi_jsonrpc_interfaces::index::UarchProcessorConfig {
             x: Some(vec![0; 32]),
             pc: Some(0x70000000),
             cycle: Some(0),
         }),
-        ram: Some(ObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebB {
+        ram: Some(cartesi_jsonrpc_interfaces::index::UarchRAMConfig {
             length: Some(77128),
             image_filename: Some(String::from("share/images/uarch-ram.bin")),
         }),

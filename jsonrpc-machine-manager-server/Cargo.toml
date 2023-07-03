@@ -10,45 +10,52 @@
 # specific language governing permissions and limitations under the License.
 
 [package]
-name = "jsonrpc-cartesi-machine"
+name = "jsonrpc-machine-manager-server"
 version = "0.1.0"
 authors = ["Marko Atanasievski <marko.atanasievski@cartesi.io>"]
-edition = "2018"
+edition = "2021"
 
-
-[lib]
-name = "jsonrpc_cartesi_machine"
-path = "src/lib.rs"
 
 [[bin]]
-name = "jsonrpc-cartesi-machine-test"
-path = "src/test_client.rs"
+name = "jsonrpc-machine-manager"
+path = "src/main.rs"
+
 
 [dependencies]
+jsonrpc-cartesi-machine = { path = "../jsonrpc-cartesi-machine" }
+grpc-cartesi-machine = { path = "../grpc-cartesi-machine" }
+
 cartesi-jsonrpc-interfaces = { path = "../cartesi-jsonrpc-interfaces" }
 tonic = "0.8.2"
 prost = "0.11"
-tokio = { version = "~1.12.0", features = ["macros", "rt-multi-thread","time"]}
-rstest = "0.11.0"
-async-std = { version = "1.5", features = ["attributes"] }
+tokio = { version = "~1.12.0", features = ["macros", "rt-multi-thread", "time"] }
 rand = "0.8.4"
-jsonrpc-client-http = "0.5.0"
-jsonrpc-client-core = "0.5.0"
-base64 = "0.21.2"
-serde_json = "1.0"
-serde = "1.0.164"
+async-trait = "0.1.51"
+rstest = "0.11.0"
+async-mutex = "1.4.0"
+http = "0.2.4"
+getopts = "0.2.21"
+sha3 = "0.9.1"
+generic-array = "0.14.4"
+chrono = "0.4.19"
 log = "0.4.14"
+env_logger = "0.9"
+serde_json = "1.0"
+serde = "1.0"
+cartesi-grpc-interfaces = { path = "../cartesi-grpc-interfaces" }
+base64 = "0.21.2"
+jsonrpc-http-server = "18.0.0"
+hyper = "0.14.20"
+jsonrpc-client-core = "0.5.0"
+tower-service = "0.3.1"
+futures-util = "0.3.28"
+jsonrpc-core-client = "18.0.0"
+jsonrpc-derive = "18.0.0"
+jsonrpc-core = "18.0.0"
 
 [build-dependencies]
 tonic-build = "0.8.2"
 
-[dev-dependencies]
-async-mutex = "1.4.0"
-
-
-
-
-
-
-
+[env]
+CARTESI_BIN_PATH = "/bin"
 

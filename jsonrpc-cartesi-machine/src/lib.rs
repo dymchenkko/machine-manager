@@ -22,6 +22,7 @@ use cartesi_jsonrpc_interfaces::index::*;
 use cartesi_jsonrpc_interfaces::*;
 
 use conversions::*;
+use serde::Deserialize;
 use tonic::Response;
 
 #[derive(Debug, Default)]
@@ -75,13 +76,8 @@ impl PartialEq for SemanticVersion {
 
 impl Eq for SemanticVersion {}
 
-impl
-    From<&ObjectOfStringDoaGddGAInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2StringDoaGddGAUXIipOfa>
-    for SemanticVersion
-{
-    fn from(
-        version: &ObjectOfStringDoaGddGAInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2StringDoaGddGAUXIipOfa,
-    ) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::SemanticVersion> for SemanticVersion {
+    fn from(version: &cartesi_jsonrpc_interfaces::index::SemanticVersion) -> Self {
         SemanticVersion {
             major: version.major,
             minor: version.minor,
@@ -172,8 +168,8 @@ impl ProcessorConfig {
     }
 }
 
-impl From<&ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4Q> for ProcessorConfig {
-    fn from(config: &ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4Q) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::ProcessorConfig> for ProcessorConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::ProcessorConfig) -> Self {
         ProcessorConfig {
             x: convert_x_csr_field(config),
             f: convert_f_csr_field(config),
@@ -206,7 +202,7 @@ impl From<&ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7B
             iflags: convert_csr_field(config.iflags),
             senvcfg: convert_csr_field(config.senvcfg),
             menvcfg: convert_csr_field(config.menvcfg),
-            fcsr: convert_csr_field(config.fcsr)
+            fcsr: convert_csr_field(config.fcsr),
         }
     }
 }
@@ -226,8 +222,8 @@ impl RamConfig {
     }
 }
 
-impl From<&ObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0> for RamConfig {
-    fn from(config: &ObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::RAMConfig> for RamConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::RAMConfig) -> Self {
         RamConfig {
             length: config.length,
             image_filename: config.image_filename.clone().unwrap(),
@@ -248,8 +244,8 @@ impl TlbConfig {
     }
 }
 
-impl From<&ObjectOfStringDoaGddGAMbKkyjX7> for TlbConfig {
-    fn from(config: &ObjectOfStringDoaGddGAMbKkyjX7) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::TLBConfig> for TlbConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::TLBConfig) -> Self {
         TlbConfig {
             image_filename: config.image_filename.clone().unwrap(),
         }
@@ -260,11 +256,9 @@ impl From<&ObjectOfStringDoaGddGAMbKkyjX7> for TlbConfig {
 #[derive(Debug, Clone, Default)]
 pub struct UarchConfig {
     #[doc = "< Uarch processor"]
-    pub processor: ::core::option::Option<
-        ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CW,
-    >,
+    pub processor: ::core::option::Option<UarchProcessorConfig>,
     #[doc = "< Uarch ram"]
-    pub ram: ::core::option::Option<ObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebB>,
+    pub ram: ::core::option::Option<UarchRAMConfig>,
 }
 
 impl UarchConfig {
@@ -273,8 +267,8 @@ impl UarchConfig {
     }
 }
 
-impl From<&ObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5A> for UarchConfig {
-    fn from(config: &ObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5A) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::UarchConfig> for UarchConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::UarchConfig) -> Self {
         UarchConfig {
             processor: config.processor.clone(),
             ram: config.ram.clone(),
@@ -297,8 +291,8 @@ impl RomConfig {
     }
 }
 
-impl From<&ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6O> for RomConfig {
-    fn from(config: &ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6O) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::ROMConfig> for RomConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::ROMConfig) -> Self {
         RomConfig {
             image_filename: config.image_filename.clone().unwrap(),
             bootargs: config.bootargs.clone().unwrap(),
@@ -325,12 +319,8 @@ impl MemoryRangeConfig {
     }
 }
 
-impl From<&ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F>
-    for MemoryRangeConfig
-{
-    fn from(
-        config: &ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F,
-    ) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::MemoryRangeConfig> for MemoryRangeConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::MemoryRangeConfig) -> Self {
         MemoryRangeConfig {
             start: config.start.unwrap(),
             length: config.length.unwrap(),
@@ -356,8 +346,8 @@ impl RollupConfig {
     }
 }
 
-impl From<&ObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGD> for RollupConfig {
-    fn from(config: &ObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGD) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::RollupConfig> for RollupConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::RollupConfig) -> Self {
         RollupConfig {
             input_metadata: match &config.input_metadata {
                 Some(config) => Some(MemoryRangeConfig::from(config)),
@@ -384,22 +374,21 @@ impl From<&ObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDo
 }
 
 #[doc = " Machine state configuration"]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MachineConfig {
     pub processor: ProcessorConfig,
     pub ram: RamConfig,
     pub rom: RomConfig,
     pub flash_drives: Vec<MemoryRangeConfig>,
-    pub clint: ObjectOfInteger7Bd9WOt2KmrDcohf,
-    pub htif:
-        ObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQei,
+    pub clint: cartesi_jsonrpc_interfaces::index::CLINTConfig,
+    pub htif: cartesi_jsonrpc_interfaces::index::HTIFConfig,
     pub rollup: RollupConfig,
     pub tlb: TlbConfig,
     pub uarch: UarchConfig,
 }
 
-impl From<&ObjectOfObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5AObjectOfStringDoaGddGAMbKkyjX7ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6OObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGDObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4QObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQeiUnorderedSetOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6Fr01Y9HDOObjectOfInteger7Bd9WOt2KmrDcohfM5JY4BqN> for MachineConfig {
-    fn from(mc: &ObjectOfObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5AObjectOfStringDoaGddGAMbKkyjX7ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6OObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGDObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4QObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQeiUnorderedSetOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6Fr01Y9HDOObjectOfInteger7Bd9WOt2KmrDcohfM5JY4BqN) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::MachineConfig> for MachineConfig {
+    fn from(mc: &cartesi_jsonrpc_interfaces::index::MachineConfig) -> Self {
         MachineConfig {
             processor: match &mc.processor {
                 Some(proc_config) => ProcessorConfig::from(proc_config),
@@ -421,13 +410,24 @@ impl From<&ObjectOfObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOf
                 Some(uarch_config) => UarchConfig::from(uarch_config),
                 None => UarchConfig::new(),
             },
-            flash_drives: { mc.flash_drive.clone().unwrap().iter().map(MemoryRangeConfig::from).collect() },
+            flash_drives: {
+                mc.flash_drive
+                    .clone()
+                    .unwrap()
+                    .iter()
+                    .map(MemoryRangeConfig::from)
+                    .collect()
+            },
             clint: match &mc.clint {
-                Some(clint_config) => ObjectOfInteger7Bd9WOt2KmrDcohf::from(clint_config.clone()),
+                Some(clint_config) => {
+                    cartesi_jsonrpc_interfaces::index::CLINTConfig::from(clint_config.clone())
+                }
                 None => Default::default(),
             },
             htif: match &mc.htif {
-                Some(htif_config) => ObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQei::from(htif_config.clone()),
+                Some(htif_config) => {
+                    cartesi_jsonrpc_interfaces::index::HTIFConfig::from(htif_config.clone())
+                }
                 None => Default::default(),
             },
             rollup: match &mc.rollup {
@@ -437,15 +437,33 @@ impl From<&ObjectOfObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOf
         }
     }
 }
+impl<'de> Deserialize<'de> for MachineConfig {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let config = serde::Deserialize::deserialize(deserializer)?;
+        Ok(config)
+    }
+}
 
+impl<'de> Deserialize<'de> for MachineRuntimeConfig {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let runtime_config = serde::Deserialize::deserialize(deserializer)?;
+        Ok(runtime_config)
+    }
+}
 #[doc = " Concurrency runtime configuration"]
 #[derive(Debug, Clone, Default)]
 pub struct ConcurrencyConfig {
     pub update_merkle_tree: u64,
 }
 
-impl From<&ObjectOfInteger7Bd9WOt2INmaA59K> for ConcurrencyConfig {
-    fn from(config: &ObjectOfInteger7Bd9WOt2INmaA59K) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::ConcurrencyConfig> for ConcurrencyConfig {
+    fn from(config: &cartesi_jsonrpc_interfaces::index::ConcurrencyConfig) -> Self {
         ConcurrencyConfig {
             update_merkle_tree: config.update_merkle_tree.unwrap(),
         }
@@ -458,13 +476,13 @@ pub struct MachineRuntimeConfig {
     pub concurrency: ConcurrencyConfig,
 }
 
-impl From<&ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6> for MachineRuntimeConfig {
-    fn from(rc: &ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig> for MachineRuntimeConfig {
+    fn from(rc: &cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig) -> Self {
         MachineRuntimeConfig {
             concurrency: ConcurrencyConfig::from(
                 rc.concurrency
                     .as_ref()
-                    .unwrap_or(&ObjectOfInteger7Bd9WOt2INmaA59K::default()),
+                    .unwrap_or(&cartesi_jsonrpc_interfaces::index::ConcurrencyConfig::default()),
             ),
         }
     }
@@ -484,8 +502,8 @@ pub struct MerkleTreeProof {
     pub sibling_hashes: Vec<String>,
 }
 
-impl From<&ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQ> for MerkleTreeProof {
-    fn from(proof: &ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQ) -> Self {
+impl From<&Proof> for MerkleTreeProof {
+    fn from(proof: &Proof) -> Self {
         MerkleTreeProof {
             target_address: proof.target_address,
             log2_target_size: proof.log_2_target_size as usize,
@@ -511,8 +529,8 @@ pub struct AccessLogType {
     pub annotations: bool,
 }
 
-impl From<&ObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2> for AccessLogType {
-    fn from(log_type: &ObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::AccessLogType> for AccessLogType {
+    fn from(log_type: &cartesi_jsonrpc_interfaces::index::AccessLogType) -> Self {
         AccessLogType {
             proofs: log_type.has_proofs,
             annotations: log_type.has_annotations,
@@ -537,8 +555,8 @@ pub struct Access {
     pub proof: MerkleTreeProof,
 }
 
-impl From<&ObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85Fz> for Access {
-    fn from(access: &ObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85Fz) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::Access> for Access {
+    fn from(access: &cartesi_jsonrpc_interfaces::index::Access) -> Self {
         let mut read_data = access.read.clone();
         let mut written_data: String = match access.written.clone() {
             Some(written_data) => written_data.clone(),
@@ -546,11 +564,11 @@ impl From<&ObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EU
         };
 
         if written_data.ends_with('\n') {
-            written_data.pop(); 
+            written_data.pop();
         }
 
         if read_data.ends_with('\n') {
-            read_data.pop(); 
+            read_data.pop();
         }
 
         Access {
@@ -588,10 +606,10 @@ pub struct BracketNote {
     #[doc = "< Note text"]
     pub text: String,
 }
-impl std::convert::From<&cartesi_jsonrpc_interfaces::index::ObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0> for BracketNote {
-    fn from(bracket_note: &ObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0) -> Self {
+impl std::convert::From<&cartesi_jsonrpc_interfaces::index::Bracket> for BracketNote {
+    fn from(bracket_note: &cartesi_jsonrpc_interfaces::index::Bracket) -> Self {
         BracketNote {
-            r#type: match bracket_note._type.to_string().as_str() {
+            r#type: match bracket_note.r#type.to_string().as_str() {
                 "begin" => BracketType::Begin,
                 "end" => BracketType::End,
                 _ => BracketType::Begin,
@@ -611,22 +629,30 @@ pub struct AccessLog {
     pub log_type: AccessLogType,
 }
 
-impl From<&ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD> for AccessLog {
-    fn from(log: &ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD) -> Self {
+impl From<&cartesi_jsonrpc_interfaces::index::AccessLog> for AccessLog {
+    fn from(log: &cartesi_jsonrpc_interfaces::index::AccessLog) -> Self {
         let log_type = AccessLogType {
-                proofs: log.log_type.has_proofs,
-                annotations: log.log_type.has_annotations
+            proofs: log.log_type.has_proofs,
+            annotations: log.log_type.has_annotations,
         };
         AccessLog {
             log_type,
             accesses: log.accesses.iter().map(Access::from).collect(),
-            brackets: log.brackets.clone().unwrap().iter().map(|e| BracketNote::from(e)).collect(),
+            brackets: log
+                .brackets
+                .clone()
+                .unwrap()
+                .iter()
+                .map(|e| BracketNote::from(e))
+                .collect(),
             notes: log.notes.clone().unwrap(),
         }
     }
 }
 
 #[doc = "Client for Cartesi emulator machine server"]
+#[derive(Clone)]
+
 pub struct JsonRpcCartesiMachineClient {
     server_address: String,
     client: RemoteCartesiMachine<jsonrpc_client_http::HttpHandle>,
@@ -635,19 +661,35 @@ pub struct JsonRpcCartesiMachineClient {
 impl JsonRpcCartesiMachineClient {
     /// Create new client instance. Connect to the server as part of client instantiation
     pub async fn new(server_address: String) -> Result<Self, jsonrpc_client_core::Error> {
-
         let transport = jsonrpc_client_http::HttpTransport::new()
             .standalone()
             .unwrap();
+        log::info!("trying to connect to the address {:?}", server_address);
         let transport_handle = transport.handle(&server_address).unwrap();
+        log::info!("after transport_handle {:?}", transport_handle);
 
         let mut remote_machine = RemoteCartesiMachine::new(transport_handle);
-        match remote_machine.CheckConnection().call().err().unwrap().kind() {
+        log::info!("after remote_machine");
+
+        match remote_machine
+            .CheckConnection()
+            .call()
+            .err()
+            .unwrap()
+            .kind()
+        {
             jsonrpc_client_core::ErrorKind::TransportError => {
+                log::info!("TransportError");
                 return Err(remote_machine.CheckConnection().call().err().unwrap())
-            },
-            _ => {},
+            }
+            _ => {}
         }
+        log::info!("after .CheckConnection()
+        .call()
+        .err()
+        .unwrap()
+        .kind()");
+
         Ok(JsonRpcCartesiMachineClient {
             server_address,
             client: remote_machine,
@@ -676,14 +718,15 @@ impl JsonRpcCartesiMachineClient {
         machine_config: &MachineConfig,
         machine_runtime_config: &MachineRuntimeConfig,
     ) -> Result<(), Box<jsonrpc_client_core::Error>> {
-        let runtime = ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6::from(machine_runtime_config);
-        let machine_oneof = ObjectOfObjectOfObjectOfInteger7Bd9WOt2StringDoaGddGAJbt7HebBObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2RuFwo0CWPjNtUa5AObjectOfStringDoaGddGAMbKkyjX7ObjectOfStringDoaGddGAStringDoaGddGAGb16ED6OObjectOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6FHGjLuuGDObjectOfInteger7Bd9WOt2StringDoaGddGAChHEqCz0ObjectOfUnorderedSetOfInteger7Bd9WOt2MMEUfR9YInteger7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2Integer7Bd9WOt2UnorderedSetOfInteger7Bd9WOt2MMEUfR9YBevRvl4QObjectOfBooleanVyG3AEThBooleanVyG3AEThInteger7Bd9WOt2Integer7Bd9WOt2BooleanVyG3AEThUydnhQeiUnorderedSetOfObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6Fr01Y9HDOObjectOfInteger7Bd9WOt2KmrDcohfM5JY4BqN::from(machine_config);
+        let runtime =
+            cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(machine_runtime_config);
+        let machine_oneof = cartesi_jsonrpc_interfaces::index::MachineConfig::from(machine_config);
         let response = self
             .client
             .MachineMachineConfig(machine_oneof, runtime)
             .call();
         if response.is_err() {
-            return Err(Box::new(response.err().unwrap()))
+            return Err(Box::new(response.err().unwrap()));
         }
         Ok(())
     }
@@ -694,7 +737,8 @@ impl JsonRpcCartesiMachineClient {
         directory: &str,
         machine_runtime_config: &MachineRuntimeConfig,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let runtime = ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6::from(machine_runtime_config);
+        let runtime =
+            cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(machine_runtime_config);
         let response = self
             .client
             .MachineMachineDirectory(directory.to_string(), runtime)
@@ -714,12 +758,9 @@ impl JsonRpcCartesiMachineClient {
 
     /// Serialize entire remote machine state to directory on cartesi machine server host
     pub async fn store(&mut self, directory: &str) -> Result<(), Box<jsonrpc_client_core::Error>> {
-        let response = self
-            .client
-            .MachineStore(directory.to_string())
-            .call();
+        let response = self.client.MachineStore(directory.to_string()).call();
         if response.is_err() {
-            return Err(Box::new(response.err().unwrap()))
+            return Err(Box::new(response.err().unwrap()));
         }
         Ok(())
     }
@@ -740,7 +781,7 @@ impl JsonRpcCartesiMachineClient {
     pub async fn shutdown(&mut self) -> Result<(), Box<jsonrpc_client_core::Error>> {
         let response = self.client.Shutdown().call();
         if response.is_err() {
-            return Err(Box::new(response.err().unwrap()))
+            return Err(Box::new(response.err().unwrap()));
         }
         Ok(())
     }
@@ -751,7 +792,7 @@ impl JsonRpcCartesiMachineClient {
         log_type: &AccessLogType,
         one_based: bool,
     ) -> Result<AccessLog, Box<dyn std::error::Error>> {
-        let log_type = ObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2 {
+        let log_type = cartesi_jsonrpc_interfaces::index::AccessLogType {
             has_proofs: log_type.proofs,
             has_annotations: log_type.annotations,
         };
@@ -777,7 +818,7 @@ impl JsonRpcCartesiMachineClient {
             .unwrap();
 
         if response.ends_with('\n') {
-            response.pop(); 
+            response.pop();
         }
 
         Ok(base64::decode(response).unwrap())
@@ -814,10 +855,10 @@ impl JsonRpcCartesiMachineClient {
         match response {
             Ok(mut hash) => {
                 if hash.ends_with('\n') {
-                    hash.pop(); 
+                    hash.pop();
                 }
                 Ok(base64::decode(hash).unwrap())
-            },
+            }
             Err(_) => Err(Box::new(JsonrpcCartesiMachineError::new(
                 "Error acquiring root hash from cartesi machine",
             ))),
@@ -843,7 +884,7 @@ impl JsonRpcCartesiMachineClient {
     /// Replaces a flash drive on a remote machine
     pub async fn replace_memory_range(
         &mut self,
-        config: ObjectOfInteger7Bd9WOt2BooleanVyG3AEThInteger7Bd9WOt2StringDoaGddGAZZfVcS6F,
+        config: cartesi_jsonrpc_interfaces::index::MemoryRangeConfig,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let response = self
             .client
@@ -865,6 +906,21 @@ impl JsonRpcCartesiMachineClient {
         Ok(response)
     }
 
+    pub async fn read_iflags_h(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+        let response = self.client.MachineReadIflagsH().call().unwrap();
+        Ok(response)
+    }
+
+    pub async fn read_iflags_x(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+        let response = self.client.MachineReadIflagsX().call().unwrap();
+        Ok(response)
+    }
+
+    pub async fn read_iflags_y(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+        let response = self.client.MachineReadIflagsY().call().unwrap();
+        Ok(response)
+    }
+
     /// Writes the value of a general-purpose register for the remote machine
     pub async fn write_x(
         &mut self,
@@ -882,22 +938,17 @@ impl JsonRpcCartesiMachineClient {
     }
 
     /// Gets the address of any CSR
-    pub async fn get_csr_address(&mut self, csr: String) -> Result<u64, Box<dyn std::error::Error>> {
-        let response = self
-            .client
-            .MachineGetCsrAddress(csr)
-            .call()
-            .unwrap();
+    pub async fn get_csr_address(
+        &mut self,
+        csr: String,
+    ) -> Result<u64, Box<dyn std::error::Error>> {
+        let response = self.client.MachineGetCsrAddress(csr).call().unwrap();
         Ok(response)
     }
 
     /// Read the value of any CSR from remote machine
     pub async fn read_csr(&mut self, csr: String) -> Result<u64, Box<dyn std::error::Error>> {
-        let response = self
-            .client
-            .MachineReadCsr(csr)
-            .call()
-            .unwrap();
+        let response = self.client.MachineReadCsr(csr).call().unwrap();
         Ok(response)
     }
 
@@ -907,11 +958,7 @@ impl JsonRpcCartesiMachineClient {
         csr: String,
         value: u64,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let response = self
-            .client
-            .MachineWriteCsr(csr, value)
-            .call()
-            .unwrap();
+        let response = self.client.MachineWriteCsr(csr, value).call().unwrap();
         Ok(())
     }
 
@@ -966,8 +1013,8 @@ impl JsonRpcCartesiMachineClient {
         runtime: &MachineRuntimeConfig,
         one_based: bool,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let log = ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD::from(log);
-        let runtime = ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6::from(runtime);
+        let log = cartesi_jsonrpc_interfaces::index::AccessLog::from(log);
+        let runtime = cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(runtime);
 
         let response = self
             .client
@@ -991,15 +1038,12 @@ impl JsonRpcCartesiMachineClient {
 
         if root_hash_before.ends_with("=") {
             root_hash_before.push('\n');
-
         }
         if root_hash_after.ends_with("=") {
             root_hash_after.push('\n');
         }
-        let log = ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD::from(log);
-        //let root_hash_before = ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD::from(root_hash_before);
-        //let root_hash_after = ObjectOfUnorderedSetOfStringDoaGddGADvj0XlFaObjectOfBooleanVyG3AEThBooleanVyG3AEThBLOCJyD2UnorderedSetOfObjectOfInteger7Bd9WOt2AnyIiyrobPFStringDoaGddGAMDICVpd0XfimEAp1UnorderedSetOfObjectOfStringBlBqGDJ5AnySqN23SiJStringBlBqGDJ5ObjectOfStringLtCQe6EUInteger7Bd9WOt2UnorderedSetOfStringLtCQe6EUR3HDjcx3StringLtCQe6EUInteger7Bd9WOt2Integer7Bd9WOt27JClvfPQInteger7Bd9WOt2Integer7Bd9WOt2GCdT85FzJF6PfWW6LwdUyvkD::from(root_hash_after);
-        let runtime = ObjectOfObjectOfInteger7Bd9WOt2INmaA59KDcXbowU6::from(runtime);
+        let log = cartesi_jsonrpc_interfaces::index::AccessLog::from(log);
+        let runtime = cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(runtime);
 
         let response = self
             .client
@@ -1008,7 +1052,7 @@ impl JsonRpcCartesiMachineClient {
                 log,
                 root_hash_after,
                 runtime,
-                one_based
+                one_based,
             )
             .call()
             .unwrap();
