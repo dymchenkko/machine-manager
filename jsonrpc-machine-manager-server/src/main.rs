@@ -53,9 +53,9 @@ async fn run_machine_manager_service(
 
     let machine_manager_server = jsonrpc_machine_manager_server::machine_manager_server::MachineManagerServer::new(machine_manager_service_);
     let mut io = jsonrpc_core::IoHandler::new();
-    let rpc = RpcImpl;
+    //let rpc = RpcImpl;
 
-    io.extend_with(rpc.to_delegate());
+    //io.extend_with(rpc.to_delegate());
     log::info!("machine io {:?}", io);
 
     //io.extend_with(machine_manager_service_.to_delegate());

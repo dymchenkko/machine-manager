@@ -10,14 +10,11 @@
 // specific language governing permissions and limitations under the License.
 
 extern crate jsonrpc_cartesi_machine;
-use async_mutex::Mutex;
 use jsonrpc_cartesi_machine::JsonRpcCartesiMachineClient;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use rstest::*;
 use std::future::Future;
 use std::sync::Arc;
-use tonic::transport::Server;
-use tonic::{Request, Response};
 
 static INITIAL_ROOT_HASH: [u8; 32] = [
     144, 183, 179, 236, 208, 219, 93, 54, 39, 226, 87, 144, 124, 49, 108, 83, 217, 127, 21, 140,
@@ -521,7 +518,7 @@ mod local_server {
             Ok(_) => panic!("Creating existing machine should fail"),
             Err(err) => assert_eq!(
                 err.to_string(),
-                "JSON-RPC 2.0 Error: Invalid request (machine exists)"
+                "ErrorObject { code: InvalidRequest, message: \"machine exists\", data: None }"
             ),
         }
         Ok(())

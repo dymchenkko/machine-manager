@@ -18,6 +18,7 @@ use async_mutex::Mutex;
 use async_trait::async_trait;
 use jsonrpc_cartesi_machine::{MachineConfig, MachineRuntimeConfig};
 use std::collections::HashMap;
+use std::io::Error;
 use std::sync::Arc;
 
 use crate::session::WAIT_RETRIES_NUMBER;
@@ -213,7 +214,7 @@ impl SessionManager for RamSessionManager {
         config: &MachineConfig,
         runtime_config: &MachineRuntimeConfig,
     ) -> Result<Arc<Mutex<Session>>, Box<dyn std::error::Error>> {
-        let mut list = self.session_list.lock().await;
+        /*let mut list = self.session_list.lock().await;
         /*if let Some(session) = list.get(session_id) {
             if force {
                 log::debug!(
@@ -278,7 +279,9 @@ impl SessionManager for RamSessionManager {
                     })?;*/
                 Err(Box::new(err))
             }
-        };
+        };*/
+
+        Err(Box::new(Error::new(std::io::ErrorKind::Other, "Error!")))
     }
 
     async fn create_session_from_directory(
@@ -302,7 +305,7 @@ impl SessionManager for RamSessionManager {
                 })?;
             }
         }*/
-        let session_mut = Arc::new(Mutex::new(
+        /*let session_mut = Arc::new(Mutex::new(
             Session::init_from_directory(
                 &self.server_manager,
                 directory,
@@ -316,7 +319,9 @@ impl SessionManager for RamSessionManager {
             session_mut,
             Arc::clone(&self.server_manager),
         )
-        .await
+        .await*/
+        Err(Box::new(Error::new(std::io::ErrorKind::Other, "Error!")))
+
     }
 
     async fn get_session(

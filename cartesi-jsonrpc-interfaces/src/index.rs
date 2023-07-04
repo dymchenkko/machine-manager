@@ -1,13 +1,16 @@
-
 #[macro_use]
 use jsonrpc_client_core;
 
+extern crate derive_builder;
 extern crate serde;
 extern crate serde_json;
-extern crate derive_builder;
 
-use serde::{Serialize, Deserialize};
+use core::future::Future;
+use core::pin::Pin;
 use derive_builder::Builder;
+use jsonrpsee_core::Error;
+use serde::{Deserialize, Serialize};
+
 pub type UnsignedInteger = u64;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Builder, Default)]
 #[builder(setter(strip_option), default)]
@@ -302,7 +305,8 @@ pub type InterpreterBreakReason = serde_json::Value;
 pub type UarchInterpreterBreakReason = serde_json::Value;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(untagged)]
-pub enum AnyOfMachineConfigMachineRuntimeConfigStringDoaGddGAMachineRuntimeConfigStringDoaGddGAUnsignedIntegerUnsignedIntegerAccessLogTypeBooleanVyG3AEThAccessLogMachineRuntimeConfigBooleanVyG3AEThAccessLogAccessLogAccessLogMachineRuntimeConfigBooleanVyG3AEThUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerBase64StringUnsignedIntegerUnsignedIntegerUnsignedIntegerBase64StringMemoryRangeConfigCSRCSRUnsignedIntegerCSRUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerStringDoaGddGABooleanVyG3AEThSemanticVersionBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThInterpreterBreakReasonUarchInterpreterBreakReasonAccessLogBooleanVyG3AEThBooleanVyG3AEThProofBase64HashProofUnsignedIntegerBase64StringBooleanVyG3AEThBase64StringBooleanVyG3AEThBooleanVyG3AEThUnsignedIntegerBooleanVyG3AEThUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThUnsignedIntegerUnsignedIntegerUnsignedIntegerBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThUnsignedIntegerBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThMachineConfigMachineConfigBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AETh {
+pub enum AnyOfMachineConfigMachineRuntimeConfigStringDoaGddGAMachineRuntimeConfigStringDoaGddGAUnsignedIntegerUnsignedIntegerAccessLogTypeBooleanVyG3AEThAccessLogMachineRuntimeConfigBooleanVyG3AEThAccessLogAccessLogAccessLogMachineRuntimeConfigBooleanVyG3AEThUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerBase64StringUnsignedIntegerUnsignedIntegerUnsignedIntegerBase64StringMemoryRangeConfigCSRCSRUnsignedIntegerCSRUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerStringDoaGddGABooleanVyG3AEThSemanticVersionBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThInterpreterBreakReasonUarchInterpreterBreakReasonAccessLogBooleanVyG3AEThBooleanVyG3AEThProofBase64HashProofUnsignedIntegerBase64StringBooleanVyG3AEThBase64StringBooleanVyG3AEThBooleanVyG3AEThUnsignedIntegerBooleanVyG3AEThUnsignedIntegerUnsignedIntegerUnsignedIntegerUnsignedIntegerBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThUnsignedIntegerUnsignedIntegerUnsignedIntegerBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThUnsignedIntegerBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AEThMachineConfigMachineConfigBooleanVyG3AEThBooleanVyG3AEThBooleanVyG3AETh
+{
     MachineConfig(MachineConfig),
     MachineRuntimeConfig(MachineRuntimeConfig),
     StringDoaGddGA(StringDoaGddGA),
@@ -321,312 +325,497 @@ pub enum AnyOfMachineConfigMachineRuntimeConfigStringDoaGddGAMachineRuntimeConfi
 }
 #[derive(Clone)]
 pub struct RemoteCartesiMachine<T> {
-    transport:T,
+    transport: T,
 }
-impl<T: jsonrpc_client_core::Transport> RemoteCartesiMachine<T> {
+impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
     pub fn new(transport: T) -> Self {
         RemoteCartesiMachine { transport }
     }
 
-    pub fn CheckConnection(&mut self) -> jsonrpc_client_core::RpcRequest<String, T::Future> {
+    pub fn CheckConnection<'a>(
+        &'a self,
+    ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> {
         let method = "";
         log::info!("Check connection");
-
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn Fork(&mut self) -> jsonrpc_client_core::RpcRequest<StringDoaGddGA, T::Future> {
+    pub fn Fork<'a>(&'a mut self) -> Pin<Box<dyn Future<Output = Result<StringDoaGddGA, Error>> + Send + 'a>> {
         let method = "fork";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn Shutdown(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn Shutdown<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "shutdown";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn GetVersion(&mut self) -> jsonrpc_client_core::RpcRequest<SemanticVersion, T::Future> {
+    pub fn GetVersion<'a>(
+        &'a self,
+    ) -> Pin<Box<dyn Future<Output = Result<SemanticVersion, Error>> + Send + 'a>> {
         let method = "get_version";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineMachineConfig(&mut self, config: MachineConfig, runtime: MachineRuntimeConfig) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineMachineConfig<'a>(
+        &'a self,
+        config: MachineConfig,
+        runtime: MachineRuntimeConfig,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.machine.config";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(config), serde_json::json!(runtime)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(config);
+        params.insert(runtime);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineMachineDirectory(&mut self, directory: StringDoaGddGA , runtime: MachineRuntimeConfig) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineMachineDirectory<'a>(
+        &'a self,
+        directory: StringDoaGddGA,
+        runtime: MachineRuntimeConfig,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send+ 'a>> {
         let method = "machine.machine.directory";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(directory), serde_json::json!(runtime)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(directory);
+        params.insert(runtime);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineDestroy(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineDestroy<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.destroy";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineStore(&mut self, directory: StringDoaGddGA) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineStore<'a>(
+        &'a mut self,
+        directory: StringDoaGddGA,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.store";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(directory)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(directory);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineRun(&mut self, mcycle_end: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<InterpreterBreakReason, T::Future> {
+    pub fn MachineRun<'a>(
+        &'a mut self,
+        mcycle_end: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<InterpreterBreakReason, Error>> + Send + 'a>> {
         let method = "machine.run";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(mcycle_end)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(mcycle_end);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineRunUarch(&mut self, uarch_cycle_end: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UarchInterpreterBreakReason, T::Future> {
+    pub fn MachineRunUarch<'a>(
+        &'a mut self,
+        uarch_cycle_end: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UarchInterpreterBreakReason, Error>> + Send + 'a>> {
         let method = "machine.run_uarch";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(uarch_cycle_end)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(uarch_cycle_end);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineStepUarch(&mut self, log_type: AccessLogType, one_based: BooleanVyG3AETh) -> jsonrpc_client_core::RpcRequest<AccessLog, T::Future> {
+    pub fn MachineStepUarch<'a>(
+        &'a mut self,
+        log_type: AccessLogType,
+        one_based: BooleanVyG3AETh,
+    ) -> Pin<Box<dyn Future<Output = Result<AccessLog, Error>> + Send + 'a>> {
         let method = "machine.step_uarch";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(log_type), serde_json::json!(one_based)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(log_type);
+        params.insert(one_based);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineVerifyAccessLog(&mut self, log: AccessLog, runtime: MachineRuntimeConfig, one_based: BooleanVyG3AETh) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineVerifyAccessLog<'a>(
+        &'a mut self,
+        log: AccessLog,
+        runtime: MachineRuntimeConfig,
+        one_based: BooleanVyG3AETh,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.verify_access_log";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(log), serde_json::json!(runtime), serde_json::json!(one_based)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(log);
+        params.insert(runtime);
+        params.insert(one_based);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineVerifyStateTransition(&mut self, root_hash_before: String, log: AccessLog, root_hash_after: String, runtime: MachineRuntimeConfig, one_based: BooleanVyG3AETh) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineVerifyStateTransition<'a>(
+        &'a mut self,
+        root_hash_before: String,
+        log: AccessLog,
+        root_hash_after: String,
+        runtime: MachineRuntimeConfig,
+        one_based: BooleanVyG3AETh,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.verify_state_transition";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(root_hash_before), serde_json::json!(log), serde_json::json!(root_hash_after), serde_json::json!(runtime), serde_json::json!(one_based)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(root_hash_before);
+        params.insert(log);
+        params.insert(root_hash_after);
+        params.insert(runtime);
+        params.insert(one_based);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineGetProof(&mut self, address: UnsignedInteger, log2_size: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<Proof, T::Future> {
+    pub fn MachineGetProof<'a>(
+        &'a mut self,
+        address: UnsignedInteger,
+        log2_size: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<Proof, Error>> + Send + 'a>> {
         let method = "machine.get_proof";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(address), serde_json::json!(log2_size)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(address);
+        params.insert(log2_size);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineGetRootHash(&mut self) -> jsonrpc_client_core::RpcRequest<Base64Hash, T::Future> {
+    pub fn MachineGetRootHash<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<Base64Hash, Error>> + Send + 'a>> {
         let method = "machine.get_root_hash";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadWord(&mut self, address: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineReadWord<'a>(
+        &'a mut self,
+        address: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.read_word";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(address)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(address);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadMemory(&mut self, address: UnsignedInteger, length: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<Base64String, T::Future> {
+    pub fn MachineReadMemory<'a>(
+        &'a mut self,
+        address: UnsignedInteger,
+        length: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<Base64String, Error>> + Send + 'a>> {
         let method = "machine.read_memory";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(address), serde_json::json!(length)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(address);
+        params.insert(length);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineWriteMemory(&mut self, address: UnsignedInteger, data: Base64String) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineWriteMemory<'a>(
+        &'a mut self,
+        address: UnsignedInteger,
+        data: Base64String,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.write_memory";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(address), serde_json::json!(data)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(address);
+        params.insert(data);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadVirtualMemory(&mut self, address: UnsignedInteger, length: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<Base64String, T::Future> {
+    pub fn MachineReadVirtualMemory<'a>(
+        &'a mut self,
+        address: UnsignedInteger,
+        length: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<Base64String, Error>> + Send + 'a>> {
         let method = "machine.read_virtual_memory";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(address), serde_json::json!(length)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(address);
+        params.insert(length);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineWriteVirtualMemory(&mut self, address: UnsignedInteger, data: Base64String) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineWriteVirtualMemory<'a>(
+        &'a mut self,
+        address: UnsignedInteger,
+        data: Base64String,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.write_virtual_memory";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(address), serde_json::json!(data)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(address);
+        params.insert(data);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReplaceMemoryRange(&mut self, range: MemoryRangeConfig) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineReplaceMemoryRange<'a>(
+        &'a mut self,
+        range: MemoryRangeConfig,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.replace_memory_range";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(range)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(range);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadCsr(&mut self, csr: String) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineReadCsr<'a>(
+        &'a mut self,
+        csr: String,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.read_csr";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(csr)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(csr);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineWriteCsr(&mut self, csr: String, value: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineWriteCsr<'a>(
+        &'a mut self,
+        csr: String,
+        value: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.write_csr";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(csr), serde_json::json!(value)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(csr);
+        params.insert(value);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineGetCsrAddress(&mut self, csr: String) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineGetCsrAddress<'a>(
+        &'a mut self,
+        csr: String,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.get_csr_address";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(csr)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(csr);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadX(&mut self, index: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineReadX<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.read_x";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadF(&mut self, index: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineReadF<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.read_f";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadUarchX(&mut self, index: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineReadUarchX<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.read_uarch_x";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineWriteX(&mut self, index: UnsignedInteger, value: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineWriteX<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+        value: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.write_x";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index), serde_json::json!(value)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        params.insert(value);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineWriteF(&mut self, index: UnsignedInteger, value: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineWriteF<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+        value: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.write_f";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index), serde_json::json!(value)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        params.insert(value);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineWriteUarchX(&mut self, index: UnsignedInteger, value: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineWriteUarchX<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+        value: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.write_uarch_x";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index), serde_json::json!(value)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        params.insert(value);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineGetXAddress(&mut self, index: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineGetXAddress<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.get_x_address";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        self.transport.request(method, params)
     }
 
-    pub fn MachineGetFAddress(&mut self, index: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineGetFAddress<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.get_f_address";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
-    }
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        self.transport.request(method, params)    }
 
-    pub fn MachineGetUarchXAddress(&mut self, index: UnsignedInteger) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineGetUarchXAddress<'a>(
+        &'a mut self,
+        index: UnsignedInteger,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.get_uarch_x_address";
-        let params: Vec<serde_json::Value> = vec![serde_json::json!(index)];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
-    }
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        params.insert(index);
+        self.transport.request(method, params)    }
 
-    pub fn MachineSetIflagsY(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineSetIflagsY<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.set_iflags_Y";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineResetIflagsY(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineResetIflagsY<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.reset_iflags_Y";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadIflagsY(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineReadIflagsY<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.read_iflags_Y";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineSetIflagsX(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineSetIflagsX<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.set_iflags_X";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineResetIflagsX(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineResetIflagsX<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.reset_iflags_X";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadIflagsX(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineReadIflagsX<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.read_iflags_X";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineSetIflagsH(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineSetIflagsH<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.set_iflags_H";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadIflagsH(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineReadIflagsH<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.read_iflags_H";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadIflagsPRV(&mut self) -> jsonrpc_client_core::RpcRequest<UnsignedInteger, T::Future> {
+    pub fn MachineReadIflagsPRV<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<UnsignedInteger, Error>> + Send + 'a>> {
         let method = "machine.read_iflags_PRV";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineSetUarchHaltFlag(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineSetUarchHaltFlag<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.set_uarch_halt_flag";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineReadUarchHaltFlag(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineReadUarchHaltFlag<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.read_uarch_halt_flag";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineResetUarchState(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineResetUarchState<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.reset_uarch_state";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineGetInitialConfig(&mut self) -> jsonrpc_client_core::RpcRequest<MachineConfig, T::Future> {
+    pub fn MachineGetInitialConfig<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<MachineConfig, Error>> + Send + 'a>> {
         let method = "machine.get_initial_config";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineGetDefaultConfig(&mut self) -> jsonrpc_client_core::RpcRequest<MachineConfig, T::Future> {
+    pub fn MachineGetDefaultConfig<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<MachineConfig, Error>> + Send + 'a>> {
         let method = "machine.get_default_config";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineVerifyMerkleTree(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineVerifyMerkleTree<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.verify_merkle_tree";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineVerifyDirtyPageMaps(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineVerifyDirtyPageMaps<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.verify_dirty_page_maps";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 
-    pub fn MachineDumpPmas(&mut self) -> jsonrpc_client_core::RpcRequest<BooleanVyG3AETh, T::Future> {
+    pub fn MachineDumpPmas<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
         let method = "machine.dump_pmas";
-        let params: Vec<serde_json::Value> = vec![];
-        jsonrpc_client_core::call_method(&mut self.transport, method.to_string(), params)
+        let mut params = jsonrpsee_core::params::ArrayParams::new();
+        self.transport.request(method, params)
     }
 }

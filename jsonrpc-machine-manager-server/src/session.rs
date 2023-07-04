@@ -400,7 +400,7 @@ impl Session {
         } else if let Some(directory) = &self.directory {
             let dir_p = directory.clone();
             //must call it as unsafe as self is already borrowed, but it is legal
-            let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+            let mut jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
             jsonrpc_cartesi_machine
                 .load_machine(&*dir_p, &*machine_runtime_config)
                 .await?;

@@ -190,18 +190,17 @@ impl MachineManagerService {
 }
 
 async fn new_session_implementation(
-    machine_manager_service: &MachineManagerService,
     machine_config: jsonrpc_cartesi_machine::MachineConfig,
     machine_runtime_config: jsonrpc_cartesi_machine::MachineRuntimeConfig,
 ) -> jsonrpc_core::Result<()> {
-    if machine_manager_service.shutting_down().await {
+    /*if machine_manager_service.shutting_down().await {
         let error_message = String::from("Server is shutting down, not accepting new requests");
         return Err(jsonrpc_core::Error {
             code: jsonrpc_core::ErrorCode::InternalError,
             message: error_message,
             data: None,
         });
-    }
+    }*/
 
     log::info!("session received new session request");
 
@@ -247,7 +246,7 @@ impl crate::machine_manager_server::JsonRpcMachineManager for MachineManagerServ
         machine_config: jsonrpc_cartesi_machine::MachineConfig,
         machine_runtime_config: jsonrpc_cartesi_machine::MachineRuntimeConfig,
     ) -> jsonrpc_core::BoxFuture<jsonrpc_core::Result<()>> {
-        new_session_implementation(self, machine_config, machine_runtime_config).boxed()
+        new_session_implementation( machine_config, machine_runtime_config).boxed()
     }
     /*
     /// Implementation of rpc SessionRun (SessionRunRequest) returns (SessionRunResponse)
@@ -776,7 +775,7 @@ pub mod machine_manager_server {
     }
 
     #[derive(Debug)]
-    pub struct MachineManagerServer<T: JsonRpcMachineManager> {
+    pub struct MachineManagerServer< T: JsonRpcMachineManager> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
