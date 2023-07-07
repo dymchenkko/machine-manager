@@ -530,7 +530,7 @@ impl Session {
         );
         // Perform snapshot
         let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        jsonrpc_cartesi_machine.fork().await?;
+        let fork_address = jsonrpc_cartesi_machine.fork().await?;
         self.snapshot_cycle = Some(self.cycle);
         self.disconnect();
         // Wait for the snapshot to check in
@@ -541,16 +541,17 @@ impl Session {
                 i
             );
             std::thread::sleep(std::time::Duration::from_millis(WAIT_SLEEP_STEP));
-            let (checked, address) = self
+            /*let (checked, address) = self
                 .server_manager
                 .lock()
                 .await
-                .get_check_in_status(&self.id);
+                .get_check_in_status(&self.id);*/
+            let checked = true;
             if checked {
                 log::debug!(
                     "session session_id={} fork is checked in on address: {}",
                     &self.id,
-                    &address
+                    &fork_address
                 );
                 break;
             }

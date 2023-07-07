@@ -38,6 +38,9 @@ serde = "1.0.164"
 log = "0.4.14"
 jsonrpsee-http-client = "0.18.2"
 jsonrpsee-core = "0.18.2"
+jsonrpsee = {version = "0.18.2", features = ["server", "client-core", "http-client", "ws-client", "macros", "async-client", "client-ws-transport-native-tls"] }
+async-mutex = "1.4.0"
+
 anyhow = "1.0.71"
 
 [build-dependencies]

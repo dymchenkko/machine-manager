@@ -77,29 +77,11 @@ RUN \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy machine manager
-COPY --from=build-image /root/cargo/bin/machine-manager $CARTESI_BIN_PATH/machine-manager
+COPY --from=build-image /root/cargo/bin/jsonrpc-machine-manager $CARTESI_BIN_PATH/jsonrpc-machine-manager
 ENV PATH=$CARTESI_BIN_PATH:$PATH
 
 EXPOSE 50051
 
 ## Changing directory to base
 WORKDIR $BASE
-CMD [ "./bin/machine-manager", "--address", "0.0.0.0", "--port", "50051"]
-
-FROM build-image
-
-COPY --from=machine-manager-rust /opt/cartesi /opt/cartesi
-
-ENV BASE /opt/cartesi
-ENV CARTESI_IMAGE_PATH $BASE/share/images
-ENV CARTESI_BIN_PATH $BASE/bin
-ENV PROTOC /root/.local/bin/protoc
-
-RUN apt-get update && apt-get install -y libcrypto++8
-RUN apt-get update && apt-get install -y libboost-log1.74.0
-RUN apt-get update && apt-get install -y libc-ares2
-RUN apt-get update && apt-get install -y libb64-dev
-
-
-WORKDIR /root/jsonrpc-cartesi-machine/test
-CMD [ "cargo", "test", "--", "--nocapture", "--test-threads", "1"]
+CMD [ "./bin/jsonrpc-machine-manager", "--address", "0.0.0.0", "--port", "50051"]

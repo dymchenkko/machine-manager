@@ -325,11 +325,17 @@ pub enum AnyOfMachineConfigMachineRuntimeConfigStringDoaGddGAMachineRuntimeConfi
 }
 #[derive(Clone)]
 pub struct RemoteCartesiMachine<T> {
-    transport: T,
+    transport: Box<T>,
 }
-impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
+
+impl<T: jsonrpsee_core::client::ClientT + Send + Sync> RemoteCartesiMachine<T>
+where
+    T: Send + Sync + 'static,
+{
     pub fn new(transport: T) -> Self {
-        RemoteCartesiMachine { transport }
+        RemoteCartesiMachine {
+            transport: Box::new(transport),
+        }
     }
 
     pub fn CheckConnection<'a>(
@@ -341,7 +347,9 @@ impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
         self.transport.request(method, params)
     }
 
-    pub fn Fork<'a>(&'a mut self) -> Pin<Box<dyn Future<Output = Result<StringDoaGddGA, Error>> + Send + 'a>> {
+    pub fn Fork<'a>(
+        &'a mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<String, Error>> + Send + 'a>> {
         let method = "fork";
         let mut params = jsonrpsee_core::params::ArrayParams::new();
         self.transport.request(method, params)
@@ -367,7 +375,8 @@ impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
         &'a self,
         config: MachineConfig,
         runtime: MachineRuntimeConfig,
-    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, jsonrpsee_core::Error>> + Send + 'a>>
+    {
         let method = "machine.machine.config";
         let mut params = jsonrpsee_core::params::ArrayParams::new();
         params.insert(config);
@@ -379,7 +388,8 @@ impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
         &'a self,
         directory: StringDoaGddGA,
         runtime: MachineRuntimeConfig,
-    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, Error>> + Send+ 'a>> {
+    ) -> Pin<Box<dyn Future<Output = Result<BooleanVyG3AETh, jsonrpsee_core::Error>> + Send + 'a>>
+    {
         let method = "machine.machine.directory";
         let mut params = jsonrpsee_core::params::ArrayParams::new();
         params.insert(directory);
@@ -672,7 +682,8 @@ impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
         let method = "machine.get_f_address";
         let mut params = jsonrpsee_core::params::ArrayParams::new();
         params.insert(index);
-        self.transport.request(method, params)    }
+        self.transport.request(method, params)
+    }
 
     pub fn MachineGetUarchXAddress<'a>(
         &'a mut self,
@@ -681,7 +692,8 @@ impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
         let method = "machine.get_uarch_x_address";
         let mut params = jsonrpsee_core::params::ArrayParams::new();
         params.insert(index);
-        self.transport.request(method, params)    }
+        self.transport.request(method, params)
+    }
 
     pub fn MachineSetIflagsY<'a>(
         &'a mut self,
@@ -818,4 +830,34 @@ impl<T: jsonrpsee_core::client::ClientT> RemoteCartesiMachine<T> {
         let mut params = jsonrpsee_core::params::ArrayParams::new();
         self.transport.request(method, params)
     }
+}
+
+pub mod machine_manager_client {
+    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    use tonic::codegen::*;
+    #[derive(Debug, Clone)]
+    pub struct MachineClient {
+        inner: jsonrpsee_http_client::HttpClient,
+    }
+
+    /*impl MachineClient {
+        pub fn new(server_address: String) -> Self {
+            let transport = jsonrpsee_http_client::HttpClientBuilder::default()
+                .build(&server_address)
+                .unwrap();
+            let inner = transport;
+            Self { inner }
+        }
+
+        pub async fn machine_machine_config(
+            &mut self,
+            machine_config: crate::MachineConfig,
+            machine_runtime_config: crate::MachineRuntimeConfig,
+        ) -> jsonrpsee::core::RpcResult<bool> {
+            
+        }
+        pub async fn run(&mut self, limit: u64) -> jsonrpsee::core::RpcResult<serde_json::Value> {
+           
+        }
+    }*/
 }

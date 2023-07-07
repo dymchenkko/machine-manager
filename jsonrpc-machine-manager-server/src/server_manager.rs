@@ -129,7 +129,7 @@ fn instantiate_local_server_instance(
     port: u32,
 ) -> Result<u32, Box<dyn std::error::Error>> {
     let address = format!("{}:{}", host, port);
-    log::debug!(
+    log::info!(
         "instantiating remote Cartesi machine on address {}",
         address,
     );
@@ -138,7 +138,7 @@ fn instantiate_local_server_instance(
         .arg(&format!("--server-address={}", &address))
         .spawn()
         .expect("unable to launch remoete Cartesi machine");
-    log::debug!("remote cartesi machine started pid='{}'", output.id());
+    log::info!("remote cartesi machine started pid='{}'", output.id());
     Ok(output.id())
 }
 

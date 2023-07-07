@@ -14,14 +14,12 @@ extern crate getopts;
 extern crate jsonrpc_machine_manager_server;
 pub mod defective_session_registry;
 
-use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::machine_manager_server;
 use getopts::Options;
-use jsonrpc_core::Params;
 use std::env;
 
-//use cartesi_jsonrpc_interfaces::machine_manager_server::MachineManagerServer;
+use jsonrpc_machine_manager_server::MachineServer;
 
-use jsonrpc_machine_manager_server::MachineManagerService;
+//use jsonrpc_machine_manager_server::MachineManagerService;
 
 use async_mutex::Mutex;
 use jsonrpc_machine_manager_server::server_manager::{LocalServerManager, ServerManager};
@@ -35,51 +33,38 @@ fn print_usage(program: &str, opts: Options) {
     print!("{}", opts.usage(&brief));
 }
 
-async fn run_machine_manager_service(
+async fn run_machine_service(
     session_manager: Arc<Mutex<dyn SessionManager>>,
     addr_checkin: std::net::SocketAddr,
-) /*-> Result<(), Box<dyn std::error::Error + Send + Sync>> */{
+) /*-> Result<(), Box<dyn std::error::Error + Send + Sync>> */
+{
     log::info!("addr_chekin addr_checkin {:?}", addr_checkin);
-    let machine_manager_service = Arc::new(Mutex::new(MachineManagerService::new(session_manager.clone())));
-    let machine_manager_service_ = MachineManagerService::new(session_manager);
-
-    /*match Server::builder()
-    .add_service(jsonrpc_machine_manager_server::machine_manager_server::MachineManagerServer::new(machine_manager_service_))
-    .serve(addr_checkin).await
-    {
-         Ok(e)=> Ok(()),
-        _ => Err(Box::new("")),
-    };*/
-
-    let machine_manager_server = jsonrpc_machine_manager_server::machine_manager_server::MachineManagerServer::new(machine_manager_service_);
-    let mut io = jsonrpc_core::IoHandler::new();
-    //let rpc = RpcImpl;
-
-    //io.extend_with(rpc.to_delegate());
-    log::info!("machine io {:?}", io);
-
-    //io.extend_with(machine_manager_service_.to_delegate());
-    let server = jsonrpc_http_server::ServerBuilder::new(io)
-		.cors(jsonrpc_http_server::DomainsValidation::AllowOnly(vec![jsonrpc_http_server::AccessControlAllowOrigin::Null]))
-		.start_http(&"0.0.0.0:50051".parse().unwrap())
-		.expect("Unable to start RPC server");
-
-	server.wait();
-
+    /*let machine_manager_service: Arc<Mutex<MachineServer<std::net::SocketAddr>>> = Arc::new(Mutex::new(MachineServer::new(
+        addr_checkin
+    )));*/
+    let machine_manager_service_ = jsonrpc_machine_manager_server::MachineService::new(false, "0.0.0.0:50051", session_manager.clone());
+    server(session_manager, addr_checkin).await;
 }
+use crate::jsonrpc_machine_manager_server::machine_manager_server::JsonRpcMachineServer;
+use jsonrpsee::server::ServerBuilder;
+pub async fn server(
+    session_manager: Arc<Mutex<dyn SessionManager>>,
+    address: std::net::SocketAddr,
+) -> std::net::SocketAddr {
+    let server = ServerBuilder::default().build(address).await.unwrap();
+    let addr = server.local_addr().unwrap();
 
-use jsonrpc_derive::rpc;
+    let machine_manager_service_ = jsonrpc_machine_manager_server::MachineService::new(false, "0.0.0.0:50051", session_manager).await;
+    let server_handle = server.start(machine_manager_service_.into_rpc());
 
-#[rpc(server)]
-pub trait Rpc {
-    #[rpc(name = "machine.machine.configg")]
-        fn new_session(
-            &self,
-            machine_config: jsonrpc_cartesi_machine::MachineConfig,
-            machine_runtime_config: jsonrpc_cartesi_machine::MachineRuntimeConfig,
-        ) -> jsonrpc_core::BoxFuture<jsonrpc_core::Result<()>>;
+    tokio::spawn(
+        server_handle
+            .expect(format!("server {:?} was stopped", addr).as_str())
+            .stopped(),
+    )
+    .await;
+    addr
 }
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let args: Vec<String> = env::args().collect();
@@ -97,7 +82,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     }
     let host = matches.opt_get_default("address", "127.0.0.1".to_string())?;
     let port = matches.opt_get_default("port", 50051)?;
-    //let defective = matches.opt_get_default("defective", false)?;
 
     // Set the global log level
     // Set log level of application
@@ -106,11 +90,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         log_level = "debug";
     }
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(log_level)).init();
-
-    /*log::info!(
-        "Starting check in service on address {}",
-        format!("{}:{}", host, port_checkin)
-    );*/
     let addr_machine_manager = format!("{}:{}", host, port);
     log::info!(
         "Starting machine manager service on address {}",
@@ -134,19 +113,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             jsonrpc_machine_manager_server::server_manager::HOST,
         )));
     //Initialize session manager
-    let session_manager: Arc<Mutex<dyn SessionManager>> = Arc::new(Mutex::new(
-        RamSessionManager::new(&server_manager),
-    ));
+    let session_manager: Arc<Mutex<dyn SessionManager>> =
+        Arc::new(Mutex::new(RamSessionManager::new(&server_manager)));
     let addr_machine_manager = format!("{}:{}", host, port).parse()?;
 
     //Run check in service and machine manager service
-    //match tokio::try_join!(
-        //run_checkin_service(addr_checkin, Arc::clone(&server_manager)),
 
-        run_machine_manager_service(session_manager, addr_machine_manager).await;
-        Ok(())
-    /*) {
-        Ok(_x) => Ok(()),
-        Err(err) => Err(err),
-    }*/
+    run_machine_service(session_manager, addr_machine_manager).await;
+    Ok(())
 }

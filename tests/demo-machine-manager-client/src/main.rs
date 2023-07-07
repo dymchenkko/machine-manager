@@ -157,9 +157,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         machine,
         force: false,
     });*/
-    println!("Session created\n");
 
-    let response = client.create_machine(&generate_default_machine_config(&image_file_root), &generate_default_machine_rt_config()).await?;
+    let def_config = generate_default_machine_config(&image_file_root);
+
+    let def_runtime = generate_default_machine_rt_config();
+
+    let response = client
+    .create_machine(&def_config, &def_runtime)
+    .await?;
+
     println!("Session created\n{:?}", response);
 
     loop {

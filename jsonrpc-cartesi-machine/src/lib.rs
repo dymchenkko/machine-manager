@@ -655,13 +655,13 @@ impl From<&cartesi_jsonrpc_interfaces::index::AccessLog> for AccessLog {
 
 pub struct JsonRpcCartesiMachineClient {
     server_address: String,
-    client:
-        std::sync::Arc<std::sync::Mutex<RemoteCartesiMachine<jsonrpsee_http_client::HttpClient>>>,
+    client: std::sync::Arc<async_mutex::Mutex<RemoteCartesiMachine<jsonrpsee_http_client::HttpClient>>>,
 }
 
 impl JsonRpcCartesiMachineClient {
     /// Create new client instance. Connect to the server as part of client instantiation
     pub async fn new<'a>(server_address: String) -> Result<Self, jsonrpsee_core::error::Error> {
+
         let mut headers = jsonrpsee_http_client::HeaderMap::new();
         headers.insert(
             "Any-Header-You-Like",
@@ -677,12 +677,12 @@ impl JsonRpcCartesiMachineClient {
         log::info!("after transport_handle {:?}", transport);
 
         let mut remote_machine =
-            std::sync::Arc::new(std::sync::Mutex::new(RemoteCartesiMachine::new(transport)));
+            std::sync::Arc::new(async_mutex::Mutex::new(RemoteCartesiMachine::new(transport)));
         log::info!("after remote_machine");
 
         match remote_machine
             .lock()
-            .unwrap()
+            .await
             .CheckConnection()
             .await
             .err()
@@ -692,7 +692,8 @@ impl JsonRpcCartesiMachineClient {
                 log::info!("TransportError");
                 return Err(jsonrpsee_core::error::Error::Transport(e));
             }
-            _ => {}
+            _ => {                log::info!("Else error happended");
+        }
         }
         log::info!(
             "after .CheckConnection()
@@ -715,7 +716,7 @@ impl JsonRpcCartesiMachineClient {
 
     /// Get Cartesi machine server version
     pub async fn get_version(&self) -> Result<SemanticVersion, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().GetVersion().await;
+        let response = self.client.lock().await.GetVersion().await;
         match response {
             Ok(stub_semantic_version) => {
                 let cloned_version = stub_semantic_version.clone();
@@ -736,13 +737,18 @@ impl JsonRpcCartesiMachineClient {
         let runtime =
             cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(machine_runtime_config);
         let machine_oneof = cartesi_jsonrpc_interfaces::index::MachineConfig::from(machine_config);
+        log::info!("creating machine------");
+
         let response = self
-            .client.lock().unwrap()
-            .MachineMachineConfig(machine_oneof, runtime)
-            .await;
+            .client.lock().await
+            .MachineMachineConfig(machine_oneof, runtime).await;
+        log::info!("created machine-------");
+
         if response.is_err() {
             return Err(Box::new(response.err().unwrap()));
         }
+
+        log::info!("create machine response: {:?}", response.unwrap());
         Ok(())
     }
 
@@ -754,26 +760,30 @@ impl JsonRpcCartesiMachineClient {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let runtime =
             cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(machine_runtime_config);
-        let response = self
-            .client.lock().unwrap()
-            .MachineMachineDirectory(directory.to_string(), runtime)
-            .await
-            .unwrap();
+            let client = std::sync::Arc::clone(&self.client);
+
+            let response = {
+                let mut client_lock = client.lock().await;
+                client_lock.MachineMachineDirectory(directory.to_string(), runtime).await
+            };
+            if response.is_err(){
+                return Err(Box::new(response.err().unwrap()))
+            }
         Ok(())
     }
 
     /// Run remote machine to maximum limit cycle
     pub async fn run(
-        &mut self,
+        &self,
         limit: u64,
     ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineRun(limit).await.unwrap();
+        let response = self.client.lock().await.MachineRun(limit).await.unwrap();
         Ok(response)
     }
 
     /// Serialize entire remote machine state to directory on cartesi machine server host
     pub async fn store(&mut self, directory: &str) -> Result<(), Box<jsonrpsee_core::Error>> {
-        let response = self.client.lock().unwrap().MachineStore(directory.to_string()).await;
+        let response = self.client.lock().await.MachineStore(directory.to_string()).await;
         if response.is_err() {
             return Err(Box::new(response.err().unwrap()));
         }
@@ -782,19 +792,19 @@ impl JsonRpcCartesiMachineClient {
 
     /// Destroy remote machine instance
     pub async fn destroy(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineDestroy().await;
+        let response = self.client.lock().await.MachineDestroy().await;
         Ok(())
     }
 
     /// Fork remote machine
     pub async fn fork(&mut self) -> Result<String, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().Fork().await.unwrap();
+        let response = self.client.lock().await.Fork().await.unwrap();
         Ok(response)
     }
 
     /// Shutdown the server
     pub async fn shutdown(&mut self) -> Result<(), Box<jsonrpsee_core::Error>> {
-        let response = self.client.lock().unwrap().Shutdown().await;
+        let response = self.client.lock().await.Shutdown().await;
         if response.is_err() {
             return Err(Box::new(response.err().unwrap()));
         }
@@ -811,7 +821,7 @@ impl JsonRpcCartesiMachineClient {
             has_proofs: log_type.proofs,
             has_annotations: log_type.annotations,
         };
-        let response = self.client.lock().unwrap().MachineStepUarch(log_type, one_based).await;
+        let response = self.client.lock().await.MachineStepUarch(log_type, one_based).await;
         match response {
             Ok(log) => Ok(AccessLog::from(&log)),
             Err(_) => Err(Box::new(JsonrpcCartesiMachineError::new(
@@ -827,7 +837,7 @@ impl JsonRpcCartesiMachineClient {
         length: u64,
     ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         let mut response = self
-            .client.lock().unwrap()
+            .client.lock().await
             .MachineReadMemory(address, length)
             .await
             .unwrap();
@@ -846,7 +856,7 @@ impl JsonRpcCartesiMachineClient {
         data: String,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let response = self
-            .client.lock().unwrap()
+            .client.lock().await
             .MachineWriteMemory(address, data)
             .await
             .unwrap();
@@ -855,7 +865,7 @@ impl JsonRpcCartesiMachineClient {
 
     /// Read the value of a word in the remote machine state
     pub async fn read_word(&mut self, address: u64) -> Result<u64, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineReadWord(address).await;
+        let response = self.client.lock().await.MachineReadWord(address).await;
         match response {
             Ok(read_word_response) => Ok(read_word_response),
             Err(_) => Err(Box::new(JsonrpcCartesiMachineError::new(
@@ -866,7 +876,7 @@ impl JsonRpcCartesiMachineClient {
 
     /// Obtains the root hash of the Merkle tree for the remote machine
     pub async fn get_root_hash(&mut self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-        let mut response = self.client.lock().unwrap().MachineGetRootHash().await;
+        let mut response = self.client.lock().await.MachineGetRootHash().await;
         match response {
             Ok(mut hash) => {
                 if hash.ends_with('\n') {
@@ -886,7 +896,7 @@ impl JsonRpcCartesiMachineClient {
         address: u64,
         log2_size: u64,
     ) -> Result<MerkleTreeProof, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineGetProof(address, log2_size).await;
+        let response = self.client.lock().await.MachineGetProof(address, log2_size).await;
         match response {
             Ok(proof) => Ok(MerkleTreeProof::from(&proof)),
             Err(_) => Err(Box::new(JsonrpcCartesiMachineError::new(&format!(
@@ -902,7 +912,7 @@ impl JsonRpcCartesiMachineClient {
         config: cartesi_jsonrpc_interfaces::index::MemoryRangeConfig,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let response = self
-            .client.lock().unwrap()
+            .client.lock().await
             .MachineReplaceMemoryRange(config)
             .await
             .unwrap();
@@ -911,28 +921,28 @@ impl JsonRpcCartesiMachineClient {
 
     /// Gets the address of a general-purpose register
     pub async fn get_x_address(&mut self, index: u64) -> Result<u64, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineGetXAddress(index).await.unwrap();
+        let response = self.client.lock().await.MachineGetXAddress(index).await.unwrap();
         Ok(response)
     }
 
     /// Reads the value of a general-purpose register from the remote machine
     pub async fn read_x(&mut self, index: u64) -> Result<u64, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineReadX(index).await.unwrap();
+        let response = self.client.lock().await.MachineReadX(index).await.unwrap();
         Ok(response)
     }
 
     pub async fn read_iflags_h(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineReadIflagsH().await.unwrap();
+        let response = self.client.lock().await.MachineReadIflagsH().await.unwrap();
         Ok(response)
     }
 
     pub async fn read_iflags_x(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineReadIflagsX().await.unwrap();
+        let response = self.client.lock().await.MachineReadIflagsX().await.unwrap();
         Ok(response)
     }
 
     pub async fn read_iflags_y(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineReadIflagsY().await.unwrap();
+        let response = self.client.lock().await.MachineReadIflagsY().await.unwrap();
         Ok(response)
     }
 
@@ -942,13 +952,13 @@ impl JsonRpcCartesiMachineClient {
         index: u64,
         value: u64,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineWriteX(index, value).await.unwrap();
+        let response = self.client.lock().await.MachineWriteX(index, value).await.unwrap();
         Ok(())
     }
 
     /// Resets the value of the iflags_Y flag on the remote machine
     pub async fn reset_iflags_y(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineResetIflagsY().await.unwrap();
+        let response = self.client.lock().await.MachineResetIflagsY().await.unwrap();
         Ok(())
     }
 
@@ -957,13 +967,13 @@ impl JsonRpcCartesiMachineClient {
         &mut self,
         csr: String,
     ) -> Result<u64, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineGetCsrAddress(csr).await.unwrap();
+        let response = self.client.lock().await.MachineGetCsrAddress(csr).await.unwrap();
         Ok(response)
     }
 
     /// Read the value of any CSR from remote machine
     pub async fn read_csr(&mut self, csr: String) -> Result<u64, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineReadCsr(csr).await.unwrap();
+        let response = self.client.lock().await.MachineReadCsr(csr).await.unwrap();
         Ok(response)
     }
 
@@ -973,7 +983,7 @@ impl JsonRpcCartesiMachineClient {
         csr: String,
         value: u64,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineWriteCsr(csr, value).await.unwrap();
+        let response = self.client.lock().await.MachineWriteCsr(csr, value).await.unwrap();
         Ok(())
     }
 
@@ -981,7 +991,7 @@ impl JsonRpcCartesiMachineClient {
     pub async fn get_initial_config(
         &mut self,
     ) -> Result<MachineConfig, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineGetInitialConfig().await;
+        let response = self.client.lock().await.MachineGetInitialConfig().await;
         match response {
             Ok(def_config) => Ok(MachineConfig::from(&def_config)),
             Err(_) => Err(Box::new(JsonrpcCartesiMachineError::new(
@@ -992,31 +1002,31 @@ impl JsonRpcCartesiMachineClient {
 
     /// Verifies integrity of Merkle tree on the remote machine
     pub async fn verify_merkle_tree(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineVerifyMerkleTree().await.unwrap();
+        let response = self.client.lock().await.MachineVerifyMerkleTree().await.unwrap();
         Ok(response)
     }
 
     /// Verify if dirty page maps are consistent on the remote machine
     pub async fn verify_dirty_page_maps(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineVerifyDirtyPageMaps().await.unwrap();
+        let response = self.client.lock().await.MachineVerifyDirtyPageMaps().await.unwrap();
         Ok(response)
     }
 
     /// Dump all memory ranges to files in current working directory on the server (for debugging purporses)
     pub async fn dump_pmas(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineDumpPmas().await.unwrap();
+        let response = self.client.lock().await.MachineDumpPmas().await.unwrap();
         Ok(())
     }
 
     /// Returns copy of default system config from remote Cartesi machine server
     pub async fn get_default_config(
-        &mut self,
+        &self,
     ) -> Result<MachineConfig, Box<dyn std::error::Error>> {
-        let response = self.client.lock().unwrap().MachineGetDefaultConfig().await;
+        let response = self.client.lock().await.MachineGetDefaultConfig().await;
         match response {
             Ok(def_config) => Ok(MachineConfig::from(&def_config)),
-            Err(_) => Err(Box::new(JsonrpcCartesiMachineError::new(
-                "Error acquiring default configuration",
+            Err(e) => Err(Box::new(JsonrpcCartesiMachineError::new(
+                format!("Error acquiring default configuration: {:?}",e).as_str()
             ))),
         }
     }
@@ -1032,7 +1042,7 @@ impl JsonRpcCartesiMachineClient {
         let runtime = cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(runtime);
 
         let response = self
-            .client.lock().unwrap()
+            .client.lock().await
             .MachineVerifyAccessLog(log, runtime, one_based)
             .await
             .unwrap();
@@ -1061,7 +1071,7 @@ impl JsonRpcCartesiMachineClient {
         let runtime = cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig::from(runtime);
 
         let response = self
-            .client.lock().unwrap()
+            .client.lock().await
             .MachineVerifyStateTransition(
                 root_hash_before,
                 log,

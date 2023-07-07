@@ -44,15 +44,11 @@ serde_json = "1.0"
 serde = "1.0"
 cartesi-grpc-interfaces = { path = "../cartesi-grpc-interfaces" }
 base64 = "0.21.2"
-jsonrpc-http-server = "18.0.0"
 hyper = "0.14.20"
-jsonrpc-client-core = "0.5.0"
 tower-service = "0.3.1"
 futures-util = "0.3.28"
-jsonrpc-core-client = "18.0.0"
-jsonrpc-derive = "18.0.0"
-jsonrpc-core = "18.0.0"
-
+jsonrpsee = {version = "0.18.2", features = ["server", "client-core", "http-client", "ws-client", "macros"] }
+jsonrpsee-types = "0.18.2"
 [build-dependencies]
 tonic-build = "0.8.2"
 
