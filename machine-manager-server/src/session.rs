@@ -16,11 +16,11 @@ use async_mutex::Mutex;
 use std::sync::Arc;
 
 use crate::server_manager::ServerManager;
-use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::{Csr, RunResponse};
-use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::SessionRunProgress;
+//use jsonrpc_cartesi_machine::grpc_stubs::cartesi_machine::{Csr, RunResponse};
+//use jsonrpc_cartesi_machine::grpc_stubs::cartesi_machine_manager::SessionRunProgress;
 use generic_array::GenericArray;
-use grpc_cartesi_machine::{
-    GrpcCartesiMachineClient, MachineConfig, MachineRuntimeConfig, MerkleTreeProof, MemoryRangeConfig
+use jsonrpc_cartesi_machine::{
+    JsonRpcCartesiMachineClient, MachineConfig, MachineRuntimeConfig, MerkleTreeProof, MemoryRangeConfig
 };
 use sha3::{Digest, Sha3_256};
 use std::fmt::Debug;
@@ -136,9 +136,9 @@ struct RunTask {
     /// Current progress
     progress: ExecutionProgress,
     /// Hashes of the machine when it reaches final cycles
-    hashes: Vec<grpc_cartesi_machine::Hash>,
+    hashes: Vec<Vec<u8>>,
     /// Summaries as RunResponse in the final cycles
-    summaries: Vec<RunResponse>,
+    summaries: Vec<cartesi_jsonrpc_interfaces::RunResponse>,
 }
 
 impl RunTask {
@@ -197,14 +197,13 @@ impl Session {
     }
     pub async fn setup_session_cartesi_server(
         &mut self,
-        checkin_address: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Start Cartesi machine server for this session
         let cartesi_session_machine_client = match self
             .server_manager
             .lock()
             .await
-            .instantiate_server(&self.id, checkin_address)
+            .instantiate_server()
             .await
         {
             Ok(client) => client,
@@ -245,13 +244,20 @@ impl Session {
     pub async fn setup_connection(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let mut server_manager = self.server_manager.lock().await;
         let (status, address) = server_manager.get_check_in_status(&self.id);
+        let status = true;
+        let address = "0.0.0.0:50051";
         if status {
+            log::info!("before connect_to_server()");
+
             self.cartesi_session_client
                 .connect_to_server(&address)
                 .await?;
+            log::info!("after connect_to_server()");
+
             let addr_info: std::net::SocketAddr = address.parse()?;
             self.cartesi_session_client.port = addr_info.port() as u32;
             self.cartesi_session_client.server_host = addr_info.ip().to_string();
+            log::info!("connected to cartesi to address and cartesi_session_client_port = {:?}", self.cartesi_session_client.port);
             Ok(())
         } else {
             Err(Box::new(CartesiSessionError::new(
@@ -282,8 +288,8 @@ impl Session {
     ) -> Result<
         (
             ExecutionProgress,
-            Vec<grpc_cartesi_machine::Hash>,
-            Vec<RunResponse>,
+            Vec<Vec<u8>>,
+            Vec<cartesi_jsonrpc_interfaces::RunResponse>,
         ),
         Box<dyn std::error::Error>,
     > {
@@ -319,17 +325,15 @@ impl Session {
     /// and runtime machine configuration. Resulting session is in initial state.
     pub async fn init_from_config(
         server_manager: &Arc<Mutex<dyn ServerManager>>,
-        session_id: &str,
         config: &MachineConfig,
         runtime_config: &MachineRuntimeConfig,
-        request: &SessionRequest,
     ) -> Result<Session, Box<dyn std::error::Error>> {
         let server_manager = Arc::clone(server_manager);
         // Create new session
         let ret = Session {
-            id: session_id.to_string(),
+            id: "session_id".to_string(),
             cartesi_session_client: CartesiSessionMachineClient::default(),
-            current_request: Some(request.clone()),
+            current_request: None,
             state: SessionState::New,
             machine_config: Some(Arc::new(config.clone())),
             directory: None,
@@ -346,17 +350,15 @@ impl Session {
     /// and runtime machine configuration. Resulting session is in initial state.
     pub async fn init_from_directory(
         server_manager: &Arc<Mutex<dyn ServerManager>>,
-        session_id: &str,
         directory: &str,
         runtime_config: &MachineRuntimeConfig,
-        request: &SessionRequest,
     ) -> Result<Session, Box<dyn std::error::Error>> {
         let server_manager = Arc::clone(server_manager);
         // Create new session
         let ret = Session {
-            id: session_id.to_string(),
+            id: "session_id".to_string(),
             cartesi_session_client: Default::default(),
-            current_request: Some(request.clone()),
+            current_request: None,
             state: SessionState::New,
             machine_config: None,
             directory: Some(directory.to_string()),
@@ -373,7 +375,7 @@ impl Session {
     /// Retrieve internal client to Cartesi machine emulator server
     fn get_cartesi_machine_client(
         &mut self,
-    ) -> Result<&mut GrpcCartesiMachineClient, Box<dyn std::error::Error>> {
+    ) -> Result<&mut jsonrpc_cartesi_machine::JsonRpcCartesiMachineClient, Box<dyn std::error::Error>> {
         match &mut self.cartesi_session_client.cartesi_machine_client {
             Some(client) => Ok(client),
             None => Err(Box::new(CartesiSessionError::new(
@@ -387,8 +389,8 @@ impl Session {
         let machine_runtime_config = Arc::clone(&self.machine_runtime_config);
         if let Some(machine_config) = &self.machine_config {
             let machine_config = Arc::clone(machine_config);
-            let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-            grpc_cartesi_machine
+            let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+            jsonrpc_cartesi_machine
                 .create_machine(&*machine_config, &*machine_runtime_config)
                 .await?;
             self.cycle = 0;
@@ -398,8 +400,8 @@ impl Session {
         } else if let Some(directory) = &self.directory {
             let dir_p = directory.clone();
             //must call it as unsafe as self is already borrowed, but it is legal
-            let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-            grpc_cartesi_machine
+            let mut jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+            jsonrpc_cartesi_machine
                 .load_machine(&*dir_p, &*machine_runtime_config)
                 .await?;
             self.cycle = 0;
@@ -416,9 +418,9 @@ impl Session {
     /// Retrieve current root hash of machine instance on remote Cartesi machine emulator server
     pub async fn get_root_hash(
         &mut self,
-    ) -> Result<grpc_cartesi_machine::Hash, Box<dyn std::error::Error>> {
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        grpc_cartesi_machine.get_root_hash().await
+    ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        jsonrpc_cartesi_machine.get_root_hash().await
     }
 
     /// Run session machine instance one CPU step forward. Functon
@@ -426,7 +428,7 @@ impl Session {
     async fn run_step(
         &mut self,
         final_cycle: u64,
-    ) -> Result<RunResponse, Box<dyn std::error::Error>> {
+    ) -> Result<cartesi_jsonrpc_interfaces::RunResponse, Box<dyn std::error::Error>> {
         if final_cycle < self.cycle {
             return Err(Box::new(CartesiSessionError::new(&format!(
                 "machine is already at cycle {}, requested cycle {}",
@@ -435,6 +437,12 @@ impl Session {
         }
         // Perform running in steps of RUN_STEP cycles
         let mut result = Default::default();
+        let mut result_iflags_h = false;
+        let mut result_mcycle = self.cycle;
+        let mut result_tohost = 0;
+        let mut result_iflags_x = false;
+        let mut result_iflags_y = false;
+
         for _current_step in 1..=RUN_STEPS_AT_ONCE {
             let step = if final_cycle > self.cycle + RUN_STEP {
                 self.cycle + RUN_STEP
@@ -442,22 +450,35 @@ impl Session {
                 final_cycle
             };
             {
-                log::debug!("running session id=\"{}\" to cycle {}", &self.id, step);
-                let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-                result = grpc_cartesi_machine.run(step).await?;
+                log::debug!("running session to cycle {}", step);
+                let jsonrpc_cartesi_machine = self.get_cartesi_machine_client().unwrap();
+                result = jsonrpc_cartesi_machine.run(step).await.unwrap();
+                result_iflags_h = jsonrpc_cartesi_machine.read_iflags_h().await.unwrap();
+                result_iflags_x = jsonrpc_cartesi_machine.read_iflags_x().await.unwrap();
+                result_iflags_y = jsonrpc_cartesi_machine.read_iflags_y().await.unwrap();
+                result_mcycle = jsonrpc_cartesi_machine.read_csr("mcycle".to_string()).await.unwrap();
+                result_tohost = jsonrpc_cartesi_machine.read_csr("htif_tohost".to_string()).await.unwrap();
             }
-            self.cycle = result.mcycle;
+            self.cycle = result_mcycle;
+            println!("result of run as Value {:?}", result);
             // Check if machine instance is halted and set session state flag accordingly
-            if result.iflags_h {
-                self.state = SessionState::Halted(result.mcycle);
+            if result_iflags_h {
+                self.state = SessionState::Halted(result_mcycle);
             } else {
                 self.state = SessionState::Active;
             }
 
-            if final_cycle == self.cycle || result.iflags_h {
+            if final_cycle == self.cycle || result_iflags_h {
                 break;
             }
         }
+        let mut result = cartesi_jsonrpc_interfaces::RunResponse{
+            iflags_h: result_iflags_h,
+            mcycle: result_mcycle,
+            tohost: result_tohost,
+            iflags_y: result_iflags_y,
+            iflags_x: result_iflags_x
+        };
         Ok(result)
     }
 
@@ -466,7 +487,7 @@ impl Session {
     async fn run_to_cycle(
         &mut self,
         requested_cycle: u64,
-    ) -> Result<RunResponse, Box<dyn std::error::Error>> {
+    ) -> Result<cartesi_jsonrpc_interfaces::RunResponse, Box<dyn std::error::Error>> {
         log::debug!(
             "running machine session id {} current cycle/requested cycle {}/{} ->",
             &self.id,
@@ -476,7 +497,8 @@ impl Session {
         if requested_cycle >= self.cycle {
             //Run machine to requested cycle, return final Run response
             loop {
-                let result = self.run_step(requested_cycle).await?;
+                let result = self.run_step(requested_cycle).await.unwrap();
+                println!("result after run_step {:?}", result);
                 if result.mcycle == requested_cycle || result.iflags_h {
                     return Ok(result);
                 }
@@ -493,42 +515,43 @@ impl Session {
     /// On Cartesi machine server snapshot is implemented by forking process, and
     /// child process uses different port for communication. Waiting for check in
     /// and reestablishing connection is part of snapshot procedure
-    pub async fn snapshot(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn fork(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if !self.is_connected() {
             return Err(Box::new(CartesiSessionError::new(&format!(
-                "Can not perform snapshot for session id {}, no connection",
+                "Can not perform fork for session id {}, no connection",
                 self.id
             ))));
         }
-        // Tell server manager to expect new checking from snapshot
+        // Tell server manager to expect new checking from fork
         self.server_manager.lock().await.set_server_check_in_status(
             &self.id,
             false,
             Default::default(),
         );
         // Perform snapshot
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        grpc_cartesi_machine.snapshot().await?;
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        let fork_address = jsonrpc_cartesi_machine.fork().await?;
         self.snapshot_cycle = Some(self.cycle);
         self.disconnect();
         // Wait for the snapshot to check in
         for i in 1..=WAIT_RETRIES_NUMBER {
             log::debug!(
-                "waiting for snapshot check in for session_id={} retry={}",
+                "waiting for fork check in for session_id={} retry={}",
                 &self.id,
                 i
             );
             std::thread::sleep(std::time::Duration::from_millis(WAIT_SLEEP_STEP));
-            let (checked, address) = self
+            /*let (checked, address) = self
                 .server_manager
                 .lock()
                 .await
-                .get_check_in_status(&self.id);
+                .get_check_in_status(&self.id);*/
+            let checked = true;
             if checked {
                 log::debug!(
-                    "session session_id={} snapshot is checked in on address: {}",
+                    "session session_id={} fork is checked in on address: {}",
                     &self.id,
-                    &address
+                    &fork_address
                 );
                 break;
             }
@@ -551,7 +574,7 @@ impl Session {
     /// On Cartesi machine server snapshot/roolback is implemented by forking process, and
     /// child process uses different port for communication. Waiting for check in
     /// and reestablishing connection to the parent rollback process is part of snapshot procedure
-    pub async fn rollback(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    /*pub async fn rollback(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if !self.is_connected() {
             return Err(Box::new(CartesiSessionError::new(&format!(
                 "Can not perform snapshot for session id {}, no connection",
@@ -565,8 +588,8 @@ impl Session {
             Default::default(),
         );
         //Perform rollback
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        grpc_cartesi_machine.rollback().await?;
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        jsonrpc_cartesi_machine.rollback().await?;
         self.cycle = self.snapshot_cycle.unwrap_or_default();
         self.snapshot_cycle = None;
         self.disconnect();
@@ -604,7 +627,7 @@ impl Session {
         // Connect to parent process
         self.setup_connection().await?;
         Ok(())
-    }
+    }*/
 
     /// Run machine according to list of final cycles
     ///
@@ -626,7 +649,7 @@ impl Session {
         session_mut: Arc<Mutex<Session>>,
         request_id: &str,
         final_cycles: &[u64],
-    ) -> Result<SessionRunProgress, Box<dyn std::error::Error>> {
+    ) -> Result<cartesi_jsonrpc_interfaces::SessionRunProgress, Box<dyn std::error::Error>> {
         log::debug!("got run request for final cycles {:?}", final_cycles);
         let mut session = session_mut.lock().await;
         if final_cycles.is_empty() {
@@ -643,16 +666,17 @@ impl Session {
                 let perform_snapshot =
                     snapshot_cycle < session.cycle || session.cycle < first_job_cycle;
 
-                if perform_snapshot {
+                //if perform_snapshot {
                     // Perform rollback and run to starting job cycle, then do a snapshot again
-                    session.rollback().await?;
-                }
+                    //session.rollback().await?;
+                //}
                 let initial_run_response = session.run_to_cycle(first_job_cycle).await?;
+                println!("result after run to cycle {:?}", initial_run_response);
                 if initial_run_response.iflags_h {
                     log::warn!("warning: machine in session id=\"{}\" halted while trying to reach initial cycle", &session.id);
                 }
                 if perform_snapshot {
-                    session.snapshot().await?;
+                    session.fork().await?;
                 }
 
                 // If there is only one final cycle in the list, already got to it.
@@ -668,6 +692,7 @@ impl Session {
                         }
                     };
 
+                    println!("initial_run_response value {:?}", initial_run_response);
                     session.current_job = Some(Job {
                         job_task: {
                             let mut new_run_task = RunTask::new(request_id, final_cycles);
@@ -685,7 +710,7 @@ impl Session {
                         job_handle: None,
                     });
 
-                    return Ok(SessionRunProgress {
+                    return Ok(cartesi_jsonrpc_interfaces::SessionRunProgress {
                         cycle: session.cycle,
                         ucycle: 0,
                         progress: 100,
@@ -745,6 +770,9 @@ impl Session {
                                     match task_session.run_to_cycle(cycle).await {
                                         Ok(response) => {
                                             let mut current_task = run_task.lock().await;
+                                            println!("is halted and iflags_y response {:?}", response);
+                                            let is_halted = false;
+
                                             let is_halted = response.iflags_h;
                                             if response.iflags_y {
                                                 //todo how to calculate application progress?
@@ -815,7 +843,7 @@ impl Session {
         }
         // Return current execution progress
         let (execution_progress, ..) = session.get_job_progress(request_id).await?;
-        Ok(SessionRunProgress {
+        Ok(cartesi_jsonrpc_interfaces::SessionRunProgress {
             cycle: execution_progress.cycle,
             ucycle: 0,
             progress: execution_progress.progress,
@@ -824,7 +852,7 @@ impl Session {
         })
     }
 
-    pub async fn run_defective(
+    /*pub async fn run_defective(
         session_mut: Arc<Mutex<Session>>,
         request_id: &str,
         final_cycles: &[u64],
@@ -879,9 +907,9 @@ impl Session {
     pub async fn step_defective(
         &mut self,
         cycle: u64,
-        log_type: &grpc_cartesi_machine::AccessLogType,
+        log_type: &jsonrpc_cartesi_machine::AccessLogType,
         one_based: bool,
-    ) -> Result<grpc_cartesi_machine::AccessLog, Box<dyn std::error::Error>> {
+    ) -> Result<jsonrpc_cartesi_machine::AccessLog, Box<dyn std::error::Error>> {
         let mut modified_cycle = cycle;
 
         if modified_cycle >= MAX_CYCLE {
@@ -901,24 +929,24 @@ impl Session {
         );
 
         session_step_result.await
-    }
+    }*/
 
-    /// Perform step of machine instance on remote Cartesi machine emulator server
+    /// Perform step of machine instance on remote JsonRpc Cartesi machine emulator server
     pub async fn step(
         &mut self,
         cycle: u64,
-        log_type: &grpc_cartesi_machine::AccessLogType,
+        log_type: &jsonrpc_cartesi_machine::AccessLogType,
         one_based: bool,
-    ) -> Result<grpc_cartesi_machine::AccessLog, Box<dyn std::error::Error>> {
+    ) -> Result<jsonrpc_cartesi_machine::AccessLog, Box<dyn std::error::Error>> {
         if self.cycle != cycle {
             return Err(Box::new(CartesiSessionError::new(&format!(
                 "unexpected session cycle, current cycle is {}",
                 self.cycle
             ))));
         }
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        let log = grpc_cartesi_machine.step(log_type, one_based).await?;
-        let halted = grpc_cartesi_machine.read_csr(Csr::HtifIhalt).await?;
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        let log = jsonrpc_cartesi_machine.step(log_type, one_based).await?;
+        let halted = jsonrpc_cartesi_machine.read_csr("HtifIhalt".to_string()).await?;
         self.cycle += 1;
         if halted > 0 {
             self.state = SessionState::Halted(self.cycle);
@@ -930,8 +958,8 @@ impl Session {
 
     /// Perform store to directory of machine instance on remote Cartesi machine emulator server
     pub async fn store(&mut self, directory: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        match grpc_cartesi_machine.store(directory).await {
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        match jsonrpc_cartesi_machine.store(directory).await {
             Ok(_void) => Ok(()),
             Err(err) => Err(err),
         }
@@ -953,16 +981,17 @@ impl Session {
                 self.cycle
             ))));
         }
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        grpc_cartesi_machine.read_memory(address, length).await
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        Ok(jsonrpc_cartesi_machine.read_memory(address, length).await.unwrap())
     }
+
 
     /// Perform write memory on machine instance on remote Cartesi machine emulator server
     pub async fn write_mem(
         &mut self,
         cycle: u64,
         address: u64,
-        data: Vec<u8>,
+        data: String,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if self.cycle != cycle {
             return Err(Box::new(CartesiSessionError::new(&format!(
@@ -970,8 +999,8 @@ impl Session {
                 self.cycle
             ))));
         }
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        grpc_cartesi_machine.write_memory(address, data).await?;
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        jsonrpc_cartesi_machine.write_memory(address, data).await?;
         Ok(())
     }
 
@@ -979,7 +1008,7 @@ impl Session {
     pub async fn replace_memory_range(
         &mut self,
         cycle: u64,
-        range: &cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::MemoryRangeConfig,
+        range: &cartesi_jsonrpc_interfaces::index::MemoryRangeConfig,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if self.cycle != cycle {
             return Err(Box::new(CartesiSessionError::new(&format!(
@@ -987,8 +1016,8 @@ impl Session {
                 self.cycle
             ))));
         }
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        grpc_cartesi_machine.replace_memory_range(range).await?;
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        jsonrpc_cartesi_machine.replace_memory_range(range.clone()).await?;
         Ok(())
     }
 
@@ -1008,8 +1037,8 @@ impl Session {
                 self.cycle
             ))));
         }
-        let grpc_cartesi_machine = self.get_cartesi_machine_client()?;
-        grpc_cartesi_machine.get_proof(address, log2_size).await
+        let jsonrpc_cartesi_machine = self.get_cartesi_machine_client()?;
+        Ok(jsonrpc_cartesi_machine.get_proof(address, log2_size).await.unwrap())
     }
 
     /// Close session and inherently close Cartesi remote server instance using server manager api

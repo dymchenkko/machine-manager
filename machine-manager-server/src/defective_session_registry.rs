@@ -9,8 +9,8 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use machine_manager_server::session::Session;
-use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::{
+//use machine_manager_server::session::Session;
+/*use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::{
     machine_request, Hash, MerkleTreeProof, Void,
 };
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::machine_manager_server::MachineManager;
@@ -21,12 +21,12 @@ use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::{
     SessionReadMemoryResponse, SessionRunRequest, SessionRunResponse,
     SessionStepRequest, SessionStepResponse, SessionStoreRequest,
     SessionWriteMemoryRequest, SessionReplaceMemoryRangeRequest,
-};
-use machine_manager_server::session::SessionRequest;
+};*/
+/*use jsonrpc_machine_manager_server::session::SessionRequest;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-extern crate machine_manager_server;
-use machine_manager_server::MachineManagerService;
+extern crate jsonrpc_machine_manager_server;
+use jsonrpc_machine_manager_server::MachineManagerService;
 
 
 pub struct MachineManagerServiceDefective{
@@ -71,14 +71,14 @@ impl MachineManager for MachineManagerServiceDefective {
             Some(m_request) => {
                 // Get runtime config from request
                 let runtime_config = match m_request.runtime {
-                    Some(rc) => grpc_cartesi_machine::MachineRuntimeConfig::from(&rc),
+                    Some(rc) => jsonrpc_cartesi_machine::MachineRuntimeConfig::from(&rc),
                     None => Default::default(),
                 };
                 return if let Some(machine_one_of) = &m_request.machine_oneof {
                     match machine_one_of {
                         machine_request::MachineOneof::Config(machine_config) => {
                             // Create session from configuration
-                            let config = grpc_cartesi_machine::MachineConfig::from(machine_config);
+                            let config = jsonrpc_cartesi_machine::MachineConfig::from(machine_config);
                             log::debug!(
                                 "creating session id={} from configuration {:#?}",
                                 &session_id,
@@ -346,14 +346,14 @@ impl MachineManager for MachineManagerServiceDefective {
                         match session
                             .step_defective(
                                 step_request.initial_cycle,
-                                &grpc_cartesi_machine::AccessLogType::from(log_type),
+                                &jsonrpc_cartesi_machine::AccessLogType::from(log_type),
                                 request.one_based,
                             )
                             .await
                         {
                             Ok(log) => {
                                 let response = SessionStepResponse {
-                                        log: Some(cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::AccessLog::from(&log))
+                                        log: Some(cartesi_jsonrpc_interfaces::AccessLog::from(&log))
                                     };
                                 MachineManagerService::clear_request(&mut session);
                                 log::info!(
@@ -396,7 +396,7 @@ impl MachineManager for MachineManagerServiceDefective {
     async fn session_store(
         &self,
         request: Request<SessionStoreRequest>,
-    ) -> Result<Response<cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::Void>, Status> {
+    ) -> Result<Response<()>, Status> {
         let request_info = SessionRequest::from(&request);
         let store_request = request.into_inner();
         log::info!(
@@ -463,7 +463,7 @@ impl MachineManager for MachineManagerServiceDefective {
                 {
                     Ok(data) => {
                         let response = SessionReadMemoryResponse{
-                            read_content: Some(cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::ReadMemoryResponse{
+                            read_content: Some(cartesi_jsonrpc_interfaces::ReadMemoryResponse{
                                 data
                             })
                         };
@@ -502,7 +502,7 @@ impl MachineManager for MachineManagerServiceDefective {
     async fn session_replace_memory_range(
         &self,
         request: Request<SessionReplaceMemoryRangeRequest>,
-    ) -> Result<Response<cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::Void>, Status> {
+    ) -> Result<Response<()>, Status> {
         let request_info = SessionRequest::from(&request);
         let replace_request = request.into_inner();
         log::info!(
@@ -560,7 +560,7 @@ impl MachineManager for MachineManagerServiceDefective {
     async fn session_write_memory(
         &self,
         request: Request<SessionWriteMemoryRequest>,
-    ) -> Result<Response<cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::Void>, Status> {
+    ) -> Result<Response<()>, Status> {
         let request_info = SessionRequest::from(&request);
         let write_request = request.into_inner();
         log::info!(
@@ -669,7 +669,7 @@ impl MachineManager for MachineManagerServiceDefective {
     async fn end_session(
         &self,
         request: Request<EndSessionRequest>,
-    ) -> Result<Response<cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::Void>, Status> {
+    ) -> Result<Response<()>, Status> {
         let end_request = request.into_inner();
         log::info!(
             "received end session request, session id={}",
@@ -696,3 +696,4 @@ impl MachineManager for MachineManagerServiceDefective {
         }
     }
 }
+*/

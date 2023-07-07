@@ -15,7 +15,7 @@
 
 use async_mutex::Mutex;
 use async_trait::async_trait;
-use grpc_cartesi_machine::GrpcCartesiMachineClient;
+use jsonrpc_cartesi_machine::JsonRpcCartesiMachineClient;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -38,7 +38,7 @@ impl CartesiServerManagerError {
 
 impl std::fmt::Display for CartesiServerManagerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Grpc cartesi server manager error: {}", &self.message)
+        write!(f, "Jsonrpc cartesi server manager error: {}", &self.message)
     }
 }
 
@@ -46,10 +46,10 @@ impl std::error::Error for CartesiServerManagerError {}
 
 /// Structure that represents Cartesi machine client targeting
 /// remote Cartesi machine server used in session
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CartesiSessionMachineClient {
     pub server_id: String,
-    pub cartesi_machine_client: Option<GrpcCartesiMachineClient>,
+    pub cartesi_machine_client: Option<JsonRpcCartesiMachineClient>,
     pub server_host: String,
     pub port: u32,
     pid: u32,
@@ -99,18 +99,19 @@ impl CartesiSessionMachineClient {
         &mut self,
         cartesi_server_address: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        log::info!("format of connect to server {:?}", cartesi_server_address);
         self.cartesi_machine_client =
-            match GrpcCartesiMachineClient::new(format!("http://{}", cartesi_server_address)).await
+            match JsonRpcCartesiMachineClient::new(format!("http://{}", cartesi_server_address)).await
             {
                 Ok(machine) => {
-                    log::debug!(
+                    log::info!(
                         "connected to remote Cartesi machine {}",
                         cartesi_server_address
                     );
                     Some(machine)
                 }
                 Err(err) => {
-                    log::error!(
+                    log::info!(
                         "unable to connect to Cartesi machine server: {}",
                         err.to_string()
                     );
@@ -126,24 +127,18 @@ fn instantiate_local_server_instance(
     cartesi_bin_path: &str,
     host: &str,
     port: u32,
-    session_id: &str,
-    checkin_address: &str,
 ) -> Result<u32, Box<dyn std::error::Error>> {
     let address = format!("{}:{}", host, port);
-    log::debug!(
-        "instantiating remote Cartesi machine on address {}, session-id={}, checkin-address={}",
+    log::info!(
+        "instantiating remote Cartesi machine on address {}",
         address,
-        session_id,
-        checkin_address
     );
-    let cartesi_server_bin = format!("{}/remote-cartesi-machine", cartesi_bin_path);
+    let cartesi_server_bin = format!("{}/jsonrpc-remote-cartesi-machine", cartesi_bin_path);
     let output = std::process::Command::new(cartesi_server_bin)
         .arg(&format!("--server-address={}", &address))
-        .arg(&format!("--session-id={}", session_id))
-        .arg(&format!("--checkin-address={}", checkin_address))
         .spawn()
         .expect("unable to launch remoete Cartesi machine");
-    log::debug!("remote cartesi machine started pid='{}'", output.id());
+    log::info!("remote cartesi machine started pid='{}'", output.id());
     Ok(output.id())
 }
 
@@ -165,17 +160,14 @@ pub trait ServerManager: Send + Sync {
     /// Create instance of new Cartesi machine server
     async fn instantiate_server(
         &self,
-        session_id: &str,
-        checkin_address: &str,
     ) -> Result<CartesiSessionMachineClient, Box<dyn std::error::Error + '_>>;
     /// Close instance of Cartesi machine server
     fn close_server(
         &self,
         session_client: &mut CartesiSessionMachineClient,
     ) -> Result<(), Box<dyn std::error::Error>>;
-    /// Set check in status for particular remote cartesi machine instance
     fn set_server_check_in_status(&mut self, session_id: &str, status: bool, address: &str);
-    /// Get Cartesi emulator server check in status
+
     fn get_check_in_status(&mut self, session_id: &str) -> (bool, String);
 }
 
@@ -212,12 +204,10 @@ impl LocalServerManager {
 
 #[async_trait]
 impl ServerManager for LocalServerManager {
-    /// Spawn new Cartesi machine serer subprocess and return
+    /// Spawn new Cartesi machine server subprocess and return
     /// matching Cartesi machine client for that server
     async fn instantiate_server(
         &self,
-        session_id: &str,
-        checkin_address: &str,
     ) -> Result<CartesiSessionMachineClient, Box<dyn std::error::Error + '_>> {
         let port = {
             // Let Cartesi machine server to select port
@@ -235,8 +225,6 @@ impl ServerManager for LocalServerManager {
             &cartesi_bin_path,
             &host,
             port,
-            session_id,
-            checkin_address,
         )?;
         new_cartesi_session_machine_client.pid = pid;
         Ok(new_cartesi_session_machine_client)
@@ -266,8 +254,6 @@ impl ServerManager for LocalServerManager {
             Err(Box::new(CartesiServerManagerError::new(&error_message)))
         }
     }
-
-    /// Set info acquired from remote-cartesi-machine check in data
     fn set_server_check_in_status(&mut self, session_id: &str, status: bool, address: &str) {
         if status {
             self.connected_servers
@@ -276,8 +262,6 @@ impl ServerManager for LocalServerManager {
             self.connected_servers.remove(session_id);
         }
     }
-
-    /// Get current info about particular Cartesi machine server instance
     fn get_check_in_status(&mut self, session_id: &str) -> (bool, String) {
         match self.connected_servers.get(session_id) {
             Some(address) => (true, address.clone()),
