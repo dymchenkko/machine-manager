@@ -94,14 +94,15 @@ impl CartesiSessionMachineClient {
         self.server_id.clone()
     }
 
-    /// Connect to server (instantiated server has already performed check in)
+    /// Connect to server
     pub(super) async fn connect_to_server(
         &mut self,
         cartesi_server_address: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        log::info!("format of connect to server {:?}", cartesi_server_address);
+        log::info!("connect_to_server address {}", cartesi_server_address);
         self.cartesi_machine_client =
-            match JsonRpcCartesiMachineClient::new(format!("http://{}", cartesi_server_address)).await
+            match JsonRpcCartesiMachineClient::new(format!("http://{}", cartesi_server_address))
+                .await
             {
                 Ok(machine) => {
                     log::info!(
@@ -115,7 +116,15 @@ impl CartesiSessionMachineClient {
                         "unable to connect to Cartesi machine server: {}",
                         err.to_string()
                     );
-                    None
+                    self.cartesi_machine_client = None;
+
+                    return Err(Box::new(CartesiServerManagerError::new(
+                        format!(
+                            "unable to connect to Cartesi machine server: {}",
+                            err.to_string()
+                        )
+                        .as_str(),
+                    )));
                 }
             };
         Ok(())
@@ -159,16 +168,17 @@ fn try_stop_process(pid: u32) -> std::process::ExitStatus {
 pub trait ServerManager: Send + Sync {
     /// Create instance of new Cartesi machine server
     async fn instantiate_server(
-        &self,
+        &mut self,
+        session_id: &str,
     ) -> Result<CartesiSessionMachineClient, Box<dyn std::error::Error + '_>>;
     /// Close instance of Cartesi machine server
     fn close_server(
         &self,
         session_client: &mut CartesiSessionMachineClient,
     ) -> Result<(), Box<dyn std::error::Error>>;
-    fn set_server_check_in_status(&mut self, session_id: &str, status: bool, address: &str);
+    fn add_address(&mut self, session_id: &str, address: &str);
 
-    fn get_check_in_status(&mut self, session_id: &str) -> (bool, String);
+    fn get_address(&mut self, session_id: &str) -> String;
 }
 
 /// Implementation of the server manager that instantiates Cartesi machine servers
@@ -207,7 +217,8 @@ impl ServerManager for LocalServerManager {
     /// Spawn new Cartesi machine server subprocess and return
     /// matching Cartesi machine client for that server
     async fn instantiate_server(
-        &self,
+        &mut self,
+        session_id: &str,
     ) -> Result<CartesiSessionMachineClient, Box<dyn std::error::Error + '_>> {
         let port = {
             // Let Cartesi machine server to select port
@@ -221,11 +232,14 @@ impl ServerManager for LocalServerManager {
             port,
             0,
         );
-        let pid = instantiate_local_server_instance(
-            &cartesi_bin_path,
-            &host,
-            port,
-        )?;
+        let address = format!("{}:{}", host, port);
+        let actual_port ={
+            let listener = std::net::TcpListener::bind(address)?;
+            let actual_port = listener.local_addr()?.port() as u32;
+            actual_port
+        };
+        let pid = instantiate_local_server_instance(&cartesi_bin_path, &host, actual_port)?;
+        self.add_address(session_id, &(host.to_string() + ":" + &actual_port.to_string()));
         new_cartesi_session_machine_client.pid = pid;
         Ok(new_cartesi_session_machine_client)
     }
@@ -254,18 +268,15 @@ impl ServerManager for LocalServerManager {
             Err(Box::new(CartesiServerManagerError::new(&error_message)))
         }
     }
-    fn set_server_check_in_status(&mut self, session_id: &str, status: bool, address: &str) {
-        if status {
-            self.connected_servers
-                .insert(session_id.to_string(), address.to_string());
-        } else {
-            self.connected_servers.remove(session_id);
-        }
+    fn add_address(&mut self, session_id: &str, address: &str) {
+        self.connected_servers
+            .insert(session_id.to_string(), address.to_string());
     }
-    fn get_check_in_status(&mut self, session_id: &str) -> (bool, String) {
+    fn get_address(&mut self, session_id: &str) -> String {
+        log::info!("connected_servers {:?}", self.connected_servers);
         match self.connected_servers.get(session_id) {
-            Some(address) => (true, address.clone()),
-            None => (false, Default::default()),
+            Some(address) => address.clone(),
+            None => Default::default(),
         }
     }
 }

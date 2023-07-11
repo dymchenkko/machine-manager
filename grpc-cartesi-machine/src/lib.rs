@@ -19,9 +19,9 @@ use std::convert::TryInto;
 use std::fmt;
 
 use cartesi_grpc_interfaces::grpc_stubs;
+use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::machine_client::MachineClient;
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::ClintConfig;
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::HtifConfig;
-use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::machine_client::MachineClient;
 use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::*;
 use conversions::*;
 use tonic::Response;
@@ -203,7 +203,7 @@ impl From<&grpc_stubs::cartesi_machine::ProcessorConfig> for ProcessorConfig {
             iflags: convert_csr_field(config.iflags),
             senvcfg: convert_csr_field(config.senvcfg),
             menvcfg: convert_csr_field(config.menvcfg),
-            fcsr: convert_csr_field(config.fcsr)
+            fcsr: convert_csr_field(config.fcsr),
         }
     }
 }
@@ -259,7 +259,8 @@ pub struct UarchConfig {
     #[doc = "< Uarch processor"]
     pub processor: ::core::option::Option<UarchProcessorConfig>,
     #[doc = "< Uarch ram"]
-    pub ram: ::core::option::Option<UarchRamConfig>,}
+    pub ram: ::core::option::Option<UarchRamConfig>,
+}
 
 impl UarchConfig {
     pub fn new() -> Self {
@@ -345,7 +346,6 @@ impl RollupConfig {
         Default::default()
     }
 }
-
 
 impl From<&grpc_stubs::cartesi_machine::RollupConfig> for RollupConfig {
     fn from(config: &grpc_stubs::cartesi_machine::RollupConfig) -> Self {
@@ -508,7 +508,90 @@ impl From<&grpc_stubs::cartesi_machine::MerkleTreeProof> for MerkleTreeProof {
         }
     }
 }
+impl From<&jsonrpc_cartesi_machine::Access> for Access {
+    fn from(access: &jsonrpc_cartesi_machine::Access) -> Self {
+        Access {
+            address: access.address,
+            log2_size: access.log2_size,
+            proof: crate::MerkleTreeProof::from(&access.proof),
+            read_data: access.read_data.clone(),
+            r#type: match access.r#type {
+                jsonrpc_cartesi_machine::AccessType::Read => AccessType::Read,
+                jsonrpc_cartesi_machine::AccessType::Write => AccessType::Write,
+            },
+            written_data: access.written_data.clone(),
+        }
+    }
+}
+impl From<&jsonrpc_cartesi_machine::BracketNote> for BracketNote {
+    fn from(bracket_note: &jsonrpc_cartesi_machine::BracketNote) -> Self {
+        BracketNote {
+            r#type: match bracket_note.r#type {
+                jsonrpc_cartesi_machine::BracketType::Begin => BracketType::Begin,
+                jsonrpc_cartesi_machine::BracketType::End => BracketType::End,
+            },
+            r#where: bracket_note.r#where,
+            text: bracket_note.text.clone(),
+        }
+    }
+}
 
+impl From<&jsonrpc_cartesi_machine::AccessLogType> for AccessLogType {
+    fn from(log_type: &jsonrpc_cartesi_machine::AccessLogType) -> Self {
+        AccessLogType {
+            proofs: log_type.proofs,
+            annotations: log_type.annotations,
+        }
+    }
+}
+impl From<&jsonrpc_cartesi_machine::AccessLog> for AccessLog {
+    fn from(log: &jsonrpc_cartesi_machine::AccessLog) -> Self {
+        AccessLog {
+            accesses: log.accesses.iter().map(|e| Access::from(e)).collect(),
+            brackets: log.brackets.iter().map(|e| BracketNote::from(e)).collect(),
+            notes: log.notes.clone(),
+            log_type: AccessLogType::from(&log.log_type),
+        }
+    }
+}
+
+impl From<&jsonrpc_cartesi_machine::MerkleTreeProof> for MerkleTreeProof {
+    fn from(proof: &jsonrpc_cartesi_machine::MerkleTreeProof) -> Self {
+        let mut target_hash = {
+            let mut target_hash = [0; 32];
+            let target_hash_decoded = base64::decode(&proof.target_hash).unwrap();
+            let len = std::cmp::min(target_hash_decoded.len(), target_hash.len());
+            target_hash[..len].copy_from_slice(&target_hash_decoded[..len]);
+            crate::Hash(target_hash)
+        };
+
+        let mut root_hash = {
+            let mut root_hash = [0; 32];
+            let root_hash_decoded = base64::decode(&proof.root_hash).unwrap();
+            let len = std::cmp::min(root_hash_decoded.len(), root_hash.len());
+            root_hash[..len].copy_from_slice(&root_hash_decoded[..len]);
+            crate::Hash(root_hash)
+        };
+        MerkleTreeProof {
+            target_address: proof.target_address,
+            log2_target_size: proof.log2_target_size as usize,
+            log2_root_size: proof.log2_root_size as usize,
+            target_hash: target_hash,
+            root_hash: root_hash,
+            sibling_hashes: proof
+                .sibling_hashes
+                .iter()
+                .map(|e| {
+                    let mut sibling_hashe = [0; 32];
+                    let sibling_hashe_decoded = base64::decode(&e).unwrap();
+                    let len = std::cmp::min(sibling_hashe_decoded.len(), sibling_hashe.len());
+                    sibling_hashe[..len].copy_from_slice(&sibling_hashe_decoded[..len]);
+                    crate::Hash(sibling_hashe)
+                })
+                .collect(),
+        }
+    }
+}
 #[doc = " Type of state access"]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccessType {

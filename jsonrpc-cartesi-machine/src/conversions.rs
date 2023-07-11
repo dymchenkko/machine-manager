@@ -20,6 +20,7 @@ impl From<&crate::MachineRuntimeConfig> for MachineRuntimeConfig {
         }
     }
 }
+
 impl From<&crate::MerkleTreeProof> for Proof {
     fn from(proof: &crate::MerkleTreeProof) -> Self {
         Proof {
@@ -28,8 +29,7 @@ impl From<&crate::MerkleTreeProof> for Proof {
             log_2_root_size: proof.log2_root_size as u64,
             target_hash: proof.target_hash.clone(),
             root_hash: proof.root_hash.clone(),
-            sibling_hashes: proof
-                .sibling_hashes.clone()
+            sibling_hashes: proof.sibling_hashes.clone(),
         }
     }
 }
@@ -41,7 +41,6 @@ impl From<&crate::Access> for Access {
 
         if read.ends_with("=") {
             read.push('\n');
-
         }
         if written.ends_with("=") {
             written.push('\n');
@@ -82,11 +81,12 @@ impl From<&crate::AccessLogType> for AccessLogType {
         }
     }
 }
+
 impl From<&crate::AccessLog> for AccessLog {
     fn from(log: &crate::AccessLog) -> Self {
         let log_type = AccessLogType {
-                has_proofs: log.log_type.proofs,
-                has_annotations: log.log_type.annotations
+            has_proofs: log.log_type.proofs,
+            has_annotations: log.log_type.annotations,
         };
         AccessLog {
             log_type,
@@ -97,9 +97,7 @@ impl From<&crate::AccessLog> for AccessLog {
     }
 }
 
-pub fn convert_x_csr_field(
-    config: &ProcessorConfig,
-) -> [u64; 32usize] {
+pub fn convert_x_csr_field(config: &ProcessorConfig) -> [u64; 32usize] {
     let mut result: [u64; 32usize] = [0; 32usize];
     result[0] = convert_csr_field(Some(config.x.clone().unwrap()[0]));
     result[1] = convert_csr_field(Some(config.x.clone().unwrap()[1]));
@@ -135,9 +133,7 @@ pub fn convert_x_csr_field(
     result
 }
 
-pub fn convert_f_csr_field(
-    config: &ProcessorConfig,
-) -> [u64; 32usize] {
+pub fn convert_f_csr_field(config: &ProcessorConfig) -> [u64; 32usize] {
     let mut result: [u64; 32usize] = [0; 32usize];
     result[0] = convert_csr_field(Some(config.f.clone().unwrap()[0]));
     result[1] = convert_csr_field(Some(config.f.clone().unwrap()[1]));
@@ -297,29 +293,21 @@ impl From<&crate::RollupConfig> for RollupConfig {
 impl From<&crate::MachineConfig> for MachineConfig {
     fn from(config: &crate::MachineConfig) -> Self {
         MachineConfig {
-            processor: Some(ProcessorConfig::from(
-                &config.processor,
-            )),
+            processor: Some(ProcessorConfig::from(&config.processor)),
             ram: Some(RAMConfig::from(&config.ram)),
             rom: Some(ROMConfig::from(&config.rom)),
             tlb: Some(TLBConfig::from(&config.tlb)),
-            uarch: Some(UarchConfig::from(
-                &config.uarch,
-            )),
-            flash_drive: Some(config
-                .flash_drives
-                .iter()
-                .map(|e| MemoryRangeConfig::from(e))
-                .collect()),
-            clint: Some(CLINTConfig::from(
-                config.clint.clone(),
-            )),
-            htif: Some(HTIFConfig::from(
-                config.htif.clone(),
-            )),
-            rollup: Some(RollupConfig::from(
-                &config.rollup,
-            )),
+            uarch: Some(UarchConfig::from(&config.uarch)),
+            flash_drive: Some(
+                config
+                    .flash_drives
+                    .iter()
+                    .map(|e| MemoryRangeConfig::from(e))
+                    .collect(),
+            ),
+            clint: Some(CLINTConfig::from(config.clint.clone())),
+            htif: Some(HTIFConfig::from(config.htif.clone())),
+            rollup: Some(RollupConfig::from(&config.rollup)),
         }
     }
 }

@@ -20,6 +20,159 @@ impl From<&crate::MachineRuntimeConfig> for grpc_stubs::cartesi_machine::Machine
     }
 }
 
+impl From<&crate::MemoryRangeConfig> for jsonrpc_cartesi_machine::MemoryRangeConfig {
+    fn from(config: &crate::MemoryRangeConfig) -> Self {
+        jsonrpc_cartesi_machine::MemoryRangeConfig {
+            start: config.start,
+            length: config.length,
+            shared: config.shared,
+            image_filename: config.image_filename.clone(),
+        }
+    }
+}
+impl From<&crate::UarchConfig> for jsonrpc_cartesi_machine::UarchConfig {
+    fn from(config: &crate::UarchConfig) -> Self {
+        jsonrpc_cartesi_machine::UarchConfig {
+            processor: match &config.processor {
+                Some(config) => Some(cartesi_jsonrpc_interfaces::index::UarchProcessorConfig::from(config)),
+                None => None,
+            },
+            ram: match &config.ram {
+                Some(config) => Some(cartesi_jsonrpc_interfaces::index::UarchRAMConfig::from(config)),
+                None => None,
+            },
+        }
+    }
+}
+
+impl From<&crate::MachineConfig> for jsonrpc_cartesi_machine::MachineConfig {
+    fn from(config: &crate::MachineConfig) -> Self {
+        jsonrpc_cartesi_machine::MachineConfig {
+            processor: jsonrpc_cartesi_machine::ProcessorConfig::from(&config.processor),
+            ram: jsonrpc_cartesi_machine::RamConfig::from(&config.ram),
+            rom: jsonrpc_cartesi_machine::RomConfig::from(&config.rom),
+            tlb: jsonrpc_cartesi_machine::TlbConfig::from(&config.tlb),
+            uarch: jsonrpc_cartesi_machine::UarchConfig::from(&config.uarch),
+            flash_drives: config
+                .flash_drives
+                .iter()
+                .map(|e| jsonrpc_cartesi_machine::MemoryRangeConfig::from(e))
+                .collect(),
+            clint: cartesi_jsonrpc_interfaces::index::CLINTConfig::from(&config.clint.clone()),
+            htif: cartesi_jsonrpc_interfaces::index::HTIFConfig::from(&config.htif.clone()),
+            rollup: jsonrpc_cartesi_machine::RollupConfig::from(&config.rollup),
+        }
+    }
+}
+
+impl From<&crate::RamConfig> for jsonrpc_cartesi_machine::RamConfig {
+    fn from(config: &crate::RamConfig) -> Self {
+        jsonrpc_cartesi_machine::RamConfig {
+            length: config.length,
+            image_filename: config.image_filename.clone(),
+        }
+    }
+}
+
+impl From<&crate::RomConfig> for jsonrpc_cartesi_machine::RomConfig {
+    fn from(config: &crate::RomConfig) -> Self {
+        jsonrpc_cartesi_machine::RomConfig {
+            bootargs: config.bootargs.clone(),
+            image_filename: config.image_filename.clone(),
+        }
+    }
+}
+
+impl From<&crate::TlbConfig> for jsonrpc_cartesi_machine::TlbConfig {
+    fn from(config: &crate::TlbConfig) -> Self {
+        jsonrpc_cartesi_machine::TlbConfig {
+            image_filename: config.image_filename.clone(),
+        }
+    }
+}
+impl From<&crate::RollupConfig> for jsonrpc_cartesi_machine::RollupConfig {
+    fn from(config: &crate::RollupConfig) -> Self {
+        jsonrpc_cartesi_machine::RollupConfig {
+            input_metadata: match &config.input_metadata {
+                Some(config) => Some(jsonrpc_cartesi_machine::MemoryRangeConfig::from(config)),
+                None => None,
+            },
+            tx_buffer: match &config.tx_buffer {
+                Some(config) => Some(jsonrpc_cartesi_machine::MemoryRangeConfig::from(config)),
+                None => None,
+            },
+            voucher_hashes: match &config.voucher_hashes {
+                Some(config) => Some(jsonrpc_cartesi_machine::MemoryRangeConfig::from(config)),
+                None => None,
+            },
+            rx_buffer: match &config.rx_buffer {
+                Some(config) => Some(jsonrpc_cartesi_machine::MemoryRangeConfig::from(config)),
+                None => None,
+            },
+            notice_hashes: match &config.notice_hashes {
+                Some(config) => Some(jsonrpc_cartesi_machine::MemoryRangeConfig::from(config)),
+                None => None,
+            },
+        }
+    }
+}
+
+impl From<&crate::ProcessorConfig> for jsonrpc_cartesi_machine::ProcessorConfig {
+    fn from(config: &crate::ProcessorConfig) -> Self {
+        jsonrpc_cartesi_machine::ProcessorConfig {
+            x: config.x,
+            f: config.f,
+            pc: config.pc,
+            mvendorid: config.mvendorid,
+            marchid: config.marchid,
+            mimpid: config.mimpid,
+            mcycle: config.mcycle,
+            icycleinstret: config.icycleinstret,
+            mstatus: config.mstatus,
+            mtvec: config.mtvec,
+            mscratch: config.mscratch,
+            mepc: config.mepc,
+            mcause: config.mcause,
+            mtval: config.mtval,
+            misa: config.misa,
+            mie: config.mie,
+            mip: config.mip,
+            medeleg: config.medeleg,
+            mideleg: config.mideleg,
+            mcounteren: config.mcounteren,
+            stvec: config.stvec,
+            sscratch: config.sscratch,
+            sepc: config.sepc,
+            scause: config.scause,
+            stval: config.stval,
+            satp: config.satp,
+            scounteren: config.scounteren,
+            ilrsc: config.ilrsc,
+            iflags: config.iflags,
+            menvcfg: config.menvcfg,
+            senvcfg: config.senvcfg,
+            fcsr: config.fcsr,
+        }
+    }
+}
+impl From<&crate::AccessLogType> for jsonrpc_cartesi_machine::AccessLogType {
+    fn from(log_type: &crate::AccessLogType) -> Self {
+        jsonrpc_cartesi_machine::AccessLogType {
+            proofs: log_type.proofs,
+            annotations: log_type.annotations,
+        }
+    }
+}
+impl From<&crate::MachineRuntimeConfig> for jsonrpc_cartesi_machine::MachineRuntimeConfig {
+    fn from(config: &crate::MachineRuntimeConfig) -> Self {
+        jsonrpc_cartesi_machine::MachineRuntimeConfig {
+            concurrency: jsonrpc_cartesi_machine::ConcurrencyConfig {
+                update_merkle_tree: config.concurrency.update_merkle_tree,
+            },
+        }
+    }
+}
+
 impl From<&crate::Hash> for grpc_stubs::cartesi_machine::Hash {
     fn from(hash: &crate::Hash) -> Self {
         grpc_stubs::cartesi_machine::Hash {

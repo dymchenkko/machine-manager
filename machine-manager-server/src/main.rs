@@ -9,17 +9,17 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-extern crate cartesi_jsonrpc_interfaces;
+extern crate cartesi_grpc_interfaces;
 extern crate getopts;
 extern crate machine_manager_server;
 pub mod defective_session_registry;
+use crate::defective_session_registry::MachineManagerServiceDefective;
 
 use getopts::Options;
 use std::env;
 
-use machine_manager_server::MachineServer;
-
-//use machine_manager_server::MachineManagerService;
+use cartesi_grpc_interfaces::grpc_stubs::cartesi_machine_manager::machine_manager_server::MachineManagerServer;
+use machine_manager_server::{MachineManagerService};
 
 use async_mutex::Mutex;
 use machine_manager_server::server_manager::{LocalServerManager, ServerManager};
@@ -27,44 +27,50 @@ use machine_manager_server::session_manager::{RamSessionManager, SessionManager}
 use machine_manager_server::{CARTESI_BIN_PATH, CARTESI_IMAGE_PATH};
 use std::error::Error;
 use std::sync::Arc;
+use tonic::transport::Server;
 
 fn print_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} [-h] [--address ADDRESS] [--port PORT]\n{} and {} environment variables must be set prior to running", program, &CARTESI_BIN_PATH, &CARTESI_IMAGE_PATH);
     print!("{}", opts.usage(&brief));
 }
 
-async fn run_machine_service(
-    session_manager: Arc<Mutex<dyn SessionManager>>,
+async fn run_machine_manager_service(
     addr_checkin: std::net::SocketAddr,
-) /*-> Result<(), Box<dyn std::error::Error + Send + Sync>> */
-{
-    log::info!("addr_chekin addr_checkin {:?}", addr_checkin);
-    /*let machine_manager_service: Arc<Mutex<MachineServer<std::net::SocketAddr>>> = Arc::new(Mutex::new(MachineServer::new(
-        addr_checkin
-    )));*/
-    let machine_manager_service_ = machine_manager_server::MachineService::new(false, "0.0.0.0:50051", session_manager.clone());
-    server(session_manager, addr_checkin).await;
-}
-use crate::machine_manager_server::machine_manager_server::JsonRpcMachineServer;
-use jsonrpsee::server::ServerBuilder;
-pub async fn server(
     session_manager: Arc<Mutex<dyn SessionManager>>,
-    address: std::net::SocketAddr,
-) -> std::net::SocketAddr {
-    let server = ServerBuilder::default().build(address).await.unwrap();
-    let addr = server.local_addr().unwrap();
+    defective: bool
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    if defective {
+        let machine_manager_service = MachineManagerService::new(session_manager.clone());
+        let mut machine_manager_service = MachineManagerServiceDefective::new(machine_manager_service);
+        machine_manager_service.machine_manager_service.shutting_down = true;
+        session_manager.lock().await.closing_all_sessions();
+        log::info!(
+            "Machine is running in defective mode",
+        );
 
-    let machine_manager_service_ = machine_manager_server::MachineService::new(false, "0.0.0.0:50051", session_manager).await;
-    let server_handle = server.start(machine_manager_service_.into_rpc());
-
-    tokio::spawn(
-        server_handle
-            .expect(format!("server {:?} was stopped", addr).as_str())
-            .stopped(),
-    )
-    .await;
-    addr
+        match Server::builder()
+        .add_service(MachineManagerServer::new(machine_manager_service))
+        .serve(addr_checkin)
+        .await
+        {
+            Ok(_x) => Ok(()),
+            Err(x) => Err(Box::new(x)),
+        }
+    }
+    else {
+        let machine_manager_service = MachineManagerService::new(session_manager);
+        match Server::builder()
+        .add_service(MachineManagerServer::new(machine_manager_service))
+        .serve(addr_checkin)
+        .await
+        {
+            Ok(_x) => Ok(()),
+            Err(x) => Err(Box::new(x)),
+        }
 }
+   
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let args: Vec<String> = env::args().collect();
@@ -73,6 +79,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let mut opts = Options::new();
     opts.optopt("", "address", "Address to listen (default: localhost)", "");
     opts.optopt("p", "port", "Port to listen (default: 50051)", "");
+    opts.optopt("d", "defective", "defective", "");
     opts.optflag("", "verbose", "print more info about application execution");
     opts.optflag("h", "help", "show this help message and exit");
     let matches = opts.parse(&args[1..])?;
@@ -82,7 +89,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     }
     let host = matches.opt_get_default("address", "127.0.0.1".to_string())?;
     let port = matches.opt_get_default("port", 50051)?;
-
+    let defective = matches.opt_get_default("defective", false)?;
     // Set the global log level
     // Set log level of application
     let mut log_level = "info";
@@ -90,7 +97,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         log_level = "debug";
     }
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(log_level)).init();
-    let addr_machine_manager = format!("{}:{}", host, port);
+
+    let addr_machine_manager = format!("{}:{}", host, port).parse()?;
     log::info!(
         "Starting machine manager service on address {}",
         format!("{}:{}", host, port)
@@ -113,12 +121,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             machine_manager_server::server_manager::HOST,
         )));
     //Initialize session manager
-    let session_manager: Arc<Mutex<dyn SessionManager>> =
-        Arc::new(Mutex::new(RamSessionManager::new(&server_manager)));
-    let addr_machine_manager = format!("{}:{}", host, port).parse()?;
+    let session_manager: Arc<Mutex<dyn SessionManager>> = Arc::new(Mutex::new(
+        RamSessionManager::new(format!("{}:{}", host, port), &server_manager),
+    ));
 
-    //Run check in service and machine manager service
+    //Run machine manager service
+    match tokio::try_join!(
+        run_machine_manager_service(addr_machine_manager, Arc::clone(&session_manager), defective)
+    ) {
+        Ok(_x) => Ok(()),
+        Err(err) => Err(err),
+    }
 
-    run_machine_service(session_manager, addr_machine_manager).await;
-    Ok(())
 }

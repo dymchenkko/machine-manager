@@ -35,10 +35,7 @@ rand = "0.8.4"
 base64 = "0.21.2"
 serde_json = "1.0"
 serde = "1.0.164"
-log = "0.4.14"
-jsonrpsee-http-client = "0.18.2"
-jsonrpsee-core = "0.18.2"
-jsonrpsee = {version = "0.18.2", features = ["server", "client-core", "http-client", "ws-client", "macros", "async-client", "client-ws-transport-native-tls"] }
+jsonrpsee = {version = "0.18.2", features=["jsonrpsee-http-client"]}
 async-mutex = "1.4.0"
 
 anyhow = "1.0.71"

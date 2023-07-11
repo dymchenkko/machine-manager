@@ -16,9 +16,8 @@ use crate::server_manager::{LocalServerManager, ServerManager};
 use crate::CARTESI_BIN_PATH;
 use async_mutex::Mutex;
 use async_trait::async_trait;
-use jsonrpc_cartesi_machine::{MachineConfig, MachineRuntimeConfig};
+use grpc_cartesi_machine::{MachineConfig, MachineRuntimeConfig};
 use std::collections::HashMap;
-use std::io::Error;
 use std::sync::Arc;
 
 use crate::session::WAIT_RETRIES_NUMBER;
@@ -57,6 +56,8 @@ pub trait SessionManager: Send + Sync {
         session_id: &str,
         config: &MachineConfig,
         runtime_config: &MachineRuntimeConfig,
+        request: &SessionRequest,
+        force: bool,
     ) -> Result<Arc<Mutex<Session>>, Box<dyn std::error::Error>>;
     /// Create new session from stored machine directory
     async fn create_session_from_directory(
@@ -64,6 +65,7 @@ pub trait SessionManager: Send + Sync {
         session_id: &str,
         directory: &str,
         runtime_config: &MachineRuntimeConfig,
+        request: &SessionRequest,
         force: bool,
     ) -> Result<Arc<Mutex<Session>>, Box<dyn std::error::Error>>;
     /// Get active session thread safe reference
@@ -83,6 +85,7 @@ pub trait SessionManager: Send + Sync {
 pub struct RamSessionManager {
     pub session_list: Mutex<HashMap<String, Arc<Mutex<Session>>>>,
     server_manager: Arc<Mutex<dyn ServerManager>>,
+    checkin_address: String,
     shutting_down: bool,
 }
 
@@ -98,6 +101,7 @@ impl Default for RamSessionManager {
                 &cartesi_bin_path,
                 crate::server_manager::HOST,
             ))),
+            checkin_address: "".to_string(),
             shutting_down: false,
         }
     }
@@ -105,8 +109,9 @@ impl Default for RamSessionManager {
 
 #[allow(dead_code)]
 impl RamSessionManager {
-    pub fn new(server_manager: &Arc<Mutex<dyn ServerManager>>) -> Self {
+    pub fn new(checkin_address: String, server_manager: &Arc<Mutex<dyn ServerManager>>) -> Self {
         RamSessionManager {
+            checkin_address,
             server_manager: Arc::clone(server_manager),
             ..Default::default()
         }
@@ -115,14 +120,13 @@ impl RamSessionManager {
 
 /// Internal session manager function that handles session initialization:
 /// * Instantiate server using server manager
-/// * Wait for check in to happen from new server instance with the info about the port
 /// * Setup session connection to newly checked in server
 /// * Create new machine on remote-cartesi-machine
-/// * Perform snapshot and wait for new checkin
+/// * Perform fork and wait for new connection
 /// * Return successfully
 async fn initialize_session(
+    session_id: &str,
     session_mut: Arc<Mutex<Session>>,
-    server_manager: Arc<Mutex<dyn ServerManager>>,
 ) -> Result<Arc<Mutex<Session>>, Box<dyn std::error::Error>> {
     session_mut
         .lock()
@@ -130,13 +134,22 @@ async fn initialize_session(
         .setup_session_cartesi_server()
         .await?;
 
-    /*let session_mut_cloned = Arc::clone(&session_mut);
+    let mut session = session_mut.lock().await;
 
-    let mut session = session_mut_cloned.lock().await;
     // Create connection to new server
-    session.setup_connection().await?;
+    for i in 1..=WAIT_RETRIES_NUMBER {
+        log::info!("waiting for connect session_id={} retry={}", &session_id, i);
+        std::thread::sleep(std::time::Duration::from_millis(WAIT_SLEEP_STEP));
+        match session.setup_connection(false).await {
+            Ok(_) => {
+                log::info!("connection set up successfully",);
+                break;
+            }
+            Err(e) => {}
+        }
+    }
 
-    //After finalized check in, create machine on server
+    //After connection, create machine on server
     match session.create_machine().await {
         Ok(()) => {
             session.clear_request();
@@ -149,13 +162,16 @@ async fn initialize_session(
         }
     };
 
-    //Perform snapshot and wait for new checkin
-    log::info!("performing fork on first cycle for session",);
-    let address_fork = session.fork().await?;
-    log::info!("fork performed for session id for address: {:?}", address_fork);
+     //Perform snapshot and wait for new checkin
+     log::debug!(
+        "performing snapshot on first cycle for session id {}",
+        session_id
+    );
+    session.snapshot().await?;
+    log::debug!("snapshot performed for session id {}", session_id);
     drop(session);
 
-    log::info!("session with session created",);*/
+    log::debug!("session with session_id={} created", &session_id);
     Ok(session_mut)
 }
 
@@ -194,12 +210,13 @@ impl SessionManager for RamSessionManager {
         session_id: &str,
         config: &MachineConfig,
         runtime_config: &MachineRuntimeConfig,
+        request: &SessionRequest,
+        force: bool,
     ) -> Result<Arc<Mutex<Session>>, Box<dyn std::error::Error>> {
-
         let mut list = self.session_list.lock().await;
         if let Some(session) = list.get(session_id) {
-            /*if force {
-                log::info!(
+            if force {
+                log::debug!(
                     "closing existing session session_id={} to recreate session",
                     &session_id
                 );
@@ -211,44 +228,40 @@ impl SessionManager for RamSessionManager {
                     )))
                 })?;
             } else {
-
                 return Err(Box::new(SessionManagerError::new(&format!(
                     "session with id='{}' already exists",
                     &session_id
                 ))));
-            }*/
+            }
         }
 
         let session_mut = Arc::new(Mutex::new(
             Session::init_from_config(
-                &Arc::clone(&self.server_manager),
-                &config,
-                &runtime_config,
+                &self.server_manager,
+                session_id,
+                config,
+                runtime_config,
+                request,
             )
             .await?,
         ));
+        list.insert(session_id.to_string(), Arc::clone(&session_mut));
+        drop(list);
+        log::info!("session with session_id={} created", &session_id);
 
         // Get temporary result, to be able to async handle removing session id from the list in case of error
-        let response: Result<Arc<Mutex<Session>>, SessionManagerError> =
-            match initialize_session(Arc::clone(&session_mut), Arc::clone(&self.server_manager))
-                .await
-            {
-                Ok(session_mut) => {
-
-                    Ok(session_mut)
-                }
-                Err(err) => {
-
-                    Err(SessionManagerError::new(&format!(
-                        "error initializing session, details: '{}'",
-                        err.to_string()
-                    )))
-                }
-            };
-
-
-        list.insert("session_id".to_string(), Arc::clone(&session_mut));
-        drop(list);
+        let response: Result<Arc<Mutex<Session>>, SessionManagerError> = match initialize_session(
+            session_id,
+            session_mut,
+        )
+        .await
+        {
+            Ok(session_mut) => Ok(session_mut),
+            Err(err) => Err(SessionManagerError::new(&format!(
+                "error initializing session, details: '{}'",
+                err.to_string()
+            ))),
+        };
 
         return match response {
             Ok(result) => Ok(result),
@@ -266,7 +279,6 @@ impl SessionManager for RamSessionManager {
                 Err(Box::new(err))
             }
         };
-
     }
 
     async fn create_session_from_directory(
@@ -274,6 +286,7 @@ impl SessionManager for RamSessionManager {
         session_id: &str,
         directory: &str,
         runtime_config: &MachineRuntimeConfig,
+        request: &SessionRequest,
         force: bool,
     ) -> Result<Arc<Mutex<Session>>, Box<dyn std::error::Error>> {
         let mut list = self.session_list.lock().await;
@@ -295,16 +308,18 @@ impl SessionManager for RamSessionManager {
         let session_mut = Arc::new(Mutex::new(
             Session::init_from_directory(
                 &self.server_manager,
+                session_id,
                 directory,
                 runtime_config,
+                request,
             )
             .await?,
         ));
         list.insert(session_id.to_string(), Arc::clone(&session_mut));
         drop(list);
         initialize_session(
+            session_id,
             session_mut,
-            Arc::clone(&self.server_manager),
         )
         .await
     }
