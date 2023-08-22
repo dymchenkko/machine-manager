@@ -51,11 +51,11 @@ async fn main() {
         .enable_capture(false)
         .context(Context::new().add(TestContext {
             machine_manager_ip: String::from("127.0.0.1"),
-            machine_manager_port: 50051,
+            machine_manager_port: 30051,
             machine_manager_checkin_ip: String::from("127.0.0.1"),
-            machine_manager_checkin_port: 50052,
+            machine_manager_checkin_port: 30052,
             caretsi_machine_ip: String::from("127.0.0.1"),
-            cartesi_machine_port: 50055,
+            cartesi_machine_port: 30055,
         }))
         .run_and_exit()
         .await

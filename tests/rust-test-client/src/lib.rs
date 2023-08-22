@@ -222,6 +222,9 @@ pub fn generate_default_machine_config(files_dir: &str) -> MachineConfig {
 pub fn generate_default_machine_rt_config() -> MachineRuntimeConfig {
     MachineRuntimeConfig {
         concurrency: None,
+        htif: None,
+        skip_root_hash_check: None,
+        skip_version_check: None
     }
 }
 #[derive(Default)]

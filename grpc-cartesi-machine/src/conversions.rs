@@ -16,6 +16,11 @@ impl From<&crate::MachineRuntimeConfig> for grpc_stubs::cartesi_machine::Machine
             concurrency: Some(grpc_stubs::cartesi_machine::ConcurrencyConfig {
                 update_merkle_tree: config.concurrency.update_merkle_tree,
             }),
+            htif: Some(grpc_stubs::cartesi_machine::HtifRuntimeConfig{
+                no_console_putchar: Some(config.htif.no_console_putchar),
+            }),
+            skip_root_hash_check: Some(config.skip_root_hash_check),
+            skip_version_check: Some(config.skip_version_check),
         }
     }
 }
@@ -169,6 +174,11 @@ impl From<&crate::MachineRuntimeConfig> for jsonrpc_cartesi_machine::MachineRunt
             concurrency: jsonrpc_cartesi_machine::ConcurrencyConfig {
                 update_merkle_tree: config.concurrency.update_merkle_tree,
             },
+            htif: jsonrpc_cartesi_machine::HTIFRuntimeConfig { 
+                no_console_putchar: Some(config.htif.no_console_putchar) 
+            },
+            skip_root_hash_check: config.skip_root_hash_check,
+            skip_version_check: config.skip_version_check,
         }
     }
 }

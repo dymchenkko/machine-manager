@@ -1,3 +1,4 @@
 [submodule "lib/grpc-interfaces"]
 	path = lib/grpc-interfaces
-	url = ../grpc-interfaces.git
+	url = https://github.com/dymchenkko/grpc-interfaces
+	branch = feat/jsonrpc

@@ -442,10 +442,19 @@ impl From<&grpc_stubs::cartesi_machine::ConcurrencyConfig> for ConcurrencyConfig
     }
 }
 
+#[doc = " Machine HTIF Runtime Configuration"]
+#[derive(Debug, Clone, Default)]
+pub struct HTIFRuntimeConfig {
+    pub no_console_putchar: bool,
+}
+
 #[doc = " Machine runtime configuration"]
 #[derive(Debug, Clone, Default)]
 pub struct MachineRuntimeConfig {
     pub concurrency: ConcurrencyConfig,
+    pub htif: HTIFRuntimeConfig,
+    pub skip_root_hash_check: bool,
+    pub skip_version_check: bool,
 }
 
 impl From<&grpc_stubs::cartesi_machine::MachineRuntimeConfig> for MachineRuntimeConfig {
@@ -456,6 +465,11 @@ impl From<&grpc_stubs::cartesi_machine::MachineRuntimeConfig> for MachineRuntime
                     .as_ref()
                     .unwrap_or(&grpc_stubs::cartesi_machine::ConcurrencyConfig::default()),
             ),
+            htif: HTIFRuntimeConfig {
+                no_console_putchar: rc.htif.as_ref().unwrap().no_console_putchar.unwrap_or(false),
+            },
+            skip_root_hash_check: rc.skip_root_hash_check.unwrap_or(false),
+            skip_version_check: rc.skip_version_check.unwrap_or(false)
         }
     }
 }

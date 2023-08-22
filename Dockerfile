@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations under the License.
 
 FROM ubuntu:22.04 as build-image
+USER root
 
 # Update default packages
 RUN apt-get update
@@ -55,7 +56,8 @@ RUN cd /root/machine-manager-server && PATH="$PATH:$HOME/.local/bin" cargo build
 
 # Container final image
 # ----------------------------------------------------
-FROM cartesi/machine-emulator:0.14.0 as machine-manager-rust
+FROM cartesi/machine-emulator:0.15.2 as machine-manager-rust
+USER root
 
 LABEL maintainer="Marko Atanasievski <marko.atanasievski@cartesi.io>"
 

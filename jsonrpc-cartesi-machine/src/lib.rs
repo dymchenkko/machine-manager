@@ -17,7 +17,7 @@ pub mod conversions;
 
 use std::fmt;
 
-use cartesi_jsonrpc_interfaces::index::*;
+pub use cartesi_jsonrpc_interfaces::index::*;
 
 use conversions::*;
 use serde::Deserialize;
@@ -496,6 +496,9 @@ impl From<&cartesi_jsonrpc_interfaces::index::ConcurrencyConfig> for Concurrency
 #[derive(Debug, Clone, Default)]
 pub struct MachineRuntimeConfig {
     pub concurrency: ConcurrencyConfig,
+    pub htif: HTIFRuntimeConfig,
+    pub skip_root_hash_check: bool,
+    pub skip_version_check: bool,
 }
 
 impl From<&cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig> for MachineRuntimeConfig {
@@ -506,6 +509,9 @@ impl From<&cartesi_jsonrpc_interfaces::index::MachineRuntimeConfig> for MachineR
                     .as_ref()
                     .unwrap_or(&cartesi_jsonrpc_interfaces::index::ConcurrencyConfig::default()),
             ),
+            htif: rc.htif.clone().unwrap_or(cartesi_jsonrpc_interfaces::index::HTIFRuntimeConfig::default()),
+            skip_root_hash_check: rc.skip_root_hash_check.unwrap_or(false),
+            skip_version_check: rc.skip_version_check.unwrap_or(false)
         }
     }
 }
@@ -677,8 +683,9 @@ impl From<&cartesi_jsonrpc_interfaces::index::AccessLog> for AccessLog {
 
 pub struct JsonRpcCartesiMachineClient {
     server_address: String,
-    client:
-        std::sync::Arc<async_mutex::Mutex<RemoteCartesiMachine<jsonrpsee::http_client::HttpClient>>>,
+    client: std::sync::Arc<
+        async_mutex::Mutex<RemoteCartesiMachine<jsonrpsee::http_client::HttpClient>>,
+    >,
 }
 
 impl JsonRpcCartesiMachineClient {
@@ -691,14 +698,14 @@ impl JsonRpcCartesiMachineClient {
         );
 
         let transport = jsonrpsee::http_client::HttpClientBuilder::default()
-            .set_headers(headers)
+            //.set_headers(headers)
             .build(&server_address)
             .unwrap();
 
         let mut remote_machine = std::sync::Arc::new(async_mutex::Mutex::new(
             RemoteCartesiMachine::new(transport),
         ));
-       match remote_machine
+        match remote_machine
             .lock()
             .await
             .CheckConnection()

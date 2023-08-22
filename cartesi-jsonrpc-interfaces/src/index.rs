@@ -9,12 +9,21 @@ use jsonrpsee::core::Error;
 use serde::{Deserialize, Serialize};
 
 pub type UnsignedInteger = u64;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Builder, Default)]
 #[builder(setter(strip_option), default)]
 #[serde(default)]
 pub struct CLINTConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mtimecmp: Option<UnsignedInteger>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Builder, Default)]
+#[builder(setter(strip_option), default)]
+#[serde(default)]
+pub struct HTIFRuntimeConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub no_console_putchar: Option<bool>,
 }
 
 impl From<&cartesi_grpc_interfaces::grpc_stubs::cartesi_machine::ClintConfig> for CLINTConfig {
@@ -424,6 +433,12 @@ pub struct MachineConfig {
 pub struct MachineRuntimeConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub concurrency: Option<ConcurrencyConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub htif: Option<HTIFRuntimeConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skip_root_hash_check: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skip_version_check: Option<bool>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Builder, Default)]
 #[builder(setter(strip_option), default)]
@@ -577,7 +592,7 @@ where
     ) -> Pin<Box<dyn Future<Output = Result<UarchInterpreterBreakReason, Error>> + Send + 'a>> {
         let method = "machine.run_uarch";
         let mut params = jsonrpsee::core::params::ArrayParams::new();
-        params.insert(uarch_cycle_end);
+        params.insert(uarch_cycle_end).unwrap();
         self.transport.request(method, params)
     }
 

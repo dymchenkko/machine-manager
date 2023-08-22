@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations under the License.
 
 FROM ubuntu:22.04 as build-image
+USER root
 
 # Update default packages
 RUN apt-get update
@@ -58,7 +59,8 @@ RUN cd /root/machine-manager-server && PATH="$PATH:$HOME/.local/bin" cargo build
 
 # Container final image
 # ----------------------------------------------------
-FROM cartesi/machine-emulator:0.14.0 as machine-manager-rust
+FROM cartesi/machine-emulator:0.15.2 as machine-manager-rust
+USER root
 
 LABEL maintainer="Marko Atanasievski <marko.atanasievski@cartesi.io>"
 
@@ -82,3 +84,20 @@ EXPOSE 50051
 ## Changing directory to base
 WORKDIR $BASE
 CMD [ "./bin/machine-manager", "--address", "0.0.0.0", "--port", "50051"]
+FROM build-image
+
+COPY --from=machine-manager-rust /usr /usr
+
+ENV BASE /usr
+ENV CARTESI_IMAGE_PATH $BASE/share/images
+ENV CARTESI_BIN_PATH $BASE/bin
+ENV PROTOC /root/.local/bin/protoc
+
+RUN apt-get update && apt-get install -y libcrypto++8
+RUN apt-get update && apt-get install -y libboost-log1.74.0
+RUN apt-get update && apt-get install -y libc-ares2
+RUN apt-get update && apt-get install -y libb64-dev
+
+
+WORKDIR /root/jsonrpc-cartesi-machine/test
+CMD [ "cargo", "test", "--", "--nocapture", "--test-threads", "1"]
